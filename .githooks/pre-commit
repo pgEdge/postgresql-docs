@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#-------------------------------------------------------------------------
+#
+# pgEdge PostgreSQL Docs
+#
+# Copyright (c) 2026, pgEdge, Inc.
+# This software is released under The PostgreSQL License
+#
+#-------------------------------------------------------------------------
+#
+# Pre-commit hook: reject generated PostgreSQL docs on main branch.
+#
+# The main branch should only contain the builder tooling and
+# supporting MkDocs files (stylesheets, overrides, images). The
+# generated Markdown lives on version-specific branches.
+
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+
+if [ "$branch" != "main" ]; then
+    exit 0
+fi
+
+# Allowed paths under docs/ — everything else is generated content.
+# Pattern matches: docs/img/  docs/stylesheets/  docs/overrides/
+allowed_pattern='^docs/(img|stylesheets|overrides)/'
+
+# Check staged files for generated docs markdown.
+bad_files="$(git diff --cached --name-only --diff-filter=ACR \
+    | grep '^docs/' \
+    | grep -v -E "$allowed_pattern")"
+
+if [ -n "$bad_files" ]; then
+    echo "ERROR: Generated PostgreSQL docs must not be committed to main."
+    echo ""
+    echo "The following staged files appear to be generated content:"
+    echo "$bad_files" | sed 's/^/  /'
+    echo ""
+    echo "Generated docs belong on version-specific branches (e.g. REL_17_STABLE)."
+    echo "To bypass this check: git commit --no-verify"
+    exit 1
+fi

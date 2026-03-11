@@ -52,6 +52,7 @@ PostgreSQL's SGML/DocBook documentation to Markdown. It handles:
 
 | Target     | Description                              |
 | ---------- | ---------------------------------------- |
+| `setup`    | Configure git hooks (run once after clone)|
 | `build`    | Compile the converter to `bin/`          |
 | `test`     | Run all Go tests                         |
 | `lint`     | Run `gofmt` and `go vet`                |

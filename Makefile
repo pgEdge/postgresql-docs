@@ -4,18 +4,21 @@ OUT_DIR ?= ./docs
 MKDOCS ?= ./mkdocs.yml
 VERSION ?= ""
 
-.PHONY: build test lint clean convert validate
+.PHONY: build test lint clean convert validate setup
 
-build:
+setup:
+	@git config core.hooksPath .githooks
+
+build: setup
 	cd builder && go build -o ../$(BINARY) .
 
-test:
+test: setup
 	cd builder && go test ./... -v
 
-lint:
+lint: setup
 	cd builder && test -z "$$(gofmt -l .)" || (gofmt -d . && exit 1) && go vet ./...
 
-clean:
+clean: setup
 	rm -f $(BINARY)
 
 convert: build
