@@ -1,4 +1,6 @@
-## `pg_subscription_rel` { #catalog-pg-subscription-rel }
+<a id="catalog-pg-subscription-rel"></a>
+
+## `pg_subscription_rel`
 
 
  The catalog `pg_subscription_rel` stores the state of each replicated table and sequence for each subscription. This is a many-to-many mapping.

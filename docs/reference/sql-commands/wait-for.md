@@ -1,4 +1,6 @@
-# WAIT FOR { #sql-wait-for }
+<a id="sql-wait-for"></a>
+
+# WAIT FOR
 
 wait for WAL to reach a target LSN
 

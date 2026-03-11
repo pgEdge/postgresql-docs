@@ -1,10 +1,12 @@
-## Temporal Tables { #ddl-temporal-tables }
+<a id="ddl-temporal-tables"></a>
+
+## Temporal Tables
 
 
  *Temporal tables* allow users to track different dimensions of history. *Application time* tracks the history of a thing out in the world, and *system time* tracks the history of the database itself. (A database that does both is also called *bitemporal*.) This section describes how to express and manage such histories in temporal tables.
+ <a id="ddl-application-time"></a>
 
-
-### Application Time { #ddl-application-time }
+### Application Time
 
 
  *Application time* refers to a history of the entity described by a table. In a typical non-temporal table, there is a single row for each entity. In a temporal table, an entity may have multiple rows, as long as those rows describe non-overlapping periods from its history. Application time requires each row to have a start and end time, expressing when the row is applicable.
@@ -23,7 +25,7 @@ CREATE TABLE products (
 
 
  Records in a temporal table can be imagined on a timeline, as in [Application Time Example](#temporal-entities-figure). Here we show three records describing two products. Each record is a tuple with three attributes: the product number, the price, and the application time. So product 5 was first offered for a price of 5.00 starting January 1, 2020, but then became 8.00 starting January 1, 2022. Its second record has no specified end time, indicating that it is true indefinitely, or for all future time. The last record shows that product 6 was introduced January 1, 2021 for 9.00, then canceled January 1, 2024.
-
+ <a id="temporal-entities-figure"></a>
 
 **Application Time Example**
 
@@ -47,9 +49,9 @@ CREATE TABLE products (
 
 
  In principle, a table with application-time ranges/multiranges is equivalent to a table that stores application-time “instants”: one for each second, millisecond, nanosecond, or whatever finest granularity is available. But such a table would contain far too many rows, so ranges/multiranges offer an optimization to represent the same information in a compact form. In addition, ranges and multiranges offer a more convenient interface for typical temporal operations, where records change infrequently enough that separate “versions” persist for extended periods of time.
+ <a id="ddl-application-time-primary-keys"></a>
 
-
-#### Temporal Primary Keys and Unique Constraints { #ddl-application-time-primary-keys }
+#### Temporal Primary Keys and Unique Constraints
 
 
  A table with application time has a different concept of entity uniqueness than a non-temporal table. Temporal entity uniqueness can be enforced with a temporal primary key. A regular primary key has at least one column, all columns are `NOT NULL`, and the combined value of all columns is unique. A temporal primary key also has at least one such column, but in addition it has a final column that is of a range type or multirange type that shows when the row is applicable. The regular parts of the key must be unique for any moment in time, but non-unique rows are allowed if their application time does not overlap.
@@ -90,9 +92,9 @@ CREATE TABLE products (
 
 
  Temporal primary keys and unique constraints have the same behavior as exclusion constraints (see [Exclusion Constraints](constraints.md#ddl-constraints-exclusion)), where each regular key part is compared with equality, and the application time is compared with overlaps, for example `EXCLUDE USING gist (id WITH =, valid_at WITH &&)`. The only difference is that they also forbid an empty application time.
+  <a id="ddl-application-time-foreign-keys"></a>
 
-
-#### Temporal Foreign Keys { #ddl-application-time-foreign-keys }
+#### Temporal Foreign Keys
 
 
  A temporal foreign key is a reference from one application-time table to another application-time table. Just as a non-temporal reference requires a referenced key to exist, so a temporal reference requires a referenced key to exist, but during whatever history the reference exists (at least). So if the `products` table is referenced by a `variants` table, and a variant of product 5 has an application-time of `[2020-01-01,2026-01-01)`, then product 5 must exist throughout that period.
@@ -114,7 +116,7 @@ CREATE TABLE variants (
 
 
  [Temporal Foreign Key Example](#temporal-references-figure) plots product 5 (in green) and two variants referencing it (in yellow) on the same timeline. Variant 8 (Medium) was introduced first, then variant 9 (XXL). Both satisfy the foreign key constraint, because the referenced product exists throughout their entire history.
-
+ <a id="temporal-references-figure"></a>
 
 **Temporal Foreign Key Example**
 
@@ -156,9 +158,9 @@ CREATE TABLE variants (
 
 
  PostgreSQL supports temporal foreign keys with action `NO ACTION`, but not `RESTRICT`, `CASCADE`, `SET NULL`, or `SET DEFAULT`.
+   <a id="ddl-system-time"></a>
 
-
-### System Time { #ddl-system-time }
+### System Time
 
 
  *System time* refers to the history of the database table, not the entity it describes. It captures when each row was inserted/updated/deleted.

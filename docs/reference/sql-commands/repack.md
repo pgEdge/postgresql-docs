@@ -1,4 +1,6 @@
-# REPACK { #sql-repack }
+<a id="sql-repack"></a>
+
+# REPACK
 
 rewrite a table to reclaim disk space
 
@@ -34,9 +36,9 @@ and TABLE_AND_COLUMNS is:
 
 
  When a table is being repacked, an `ACCESS EXCLUSIVE` lock is acquired on it. This prevents any other database operations (both reads and writes) from operating on the table until the `REPACK` is finished.
+ <a id="sql-repack-notes-on-clustering"></a>
 
-
-### Notes on Clustering { #sql-repack-notes-on-clustering }
+### Notes on Clustering
 
 
  If the `USING INDEX` clause is specified, the rows in the table are stored in the order that the index specifies; *clustering*, because rows are physically clustered afterwards. If an index name is specified in the command, the order implied by that index is used, and that index is configured as the index to cluster on. (This also applies to an index given to the `CLUSTER` command.) If no index name is specified, then the index that has been configured as the index to cluster on is used; an error is thrown if none has. An index can be set manually using `ALTER TABLE ... CLUSTER ON`, and reset with `ALTER TABLE ... SET WITHOUT CLUSTER`.
@@ -55,9 +57,9 @@ and TABLE_AND_COLUMNS is:
 
 
  Because the planner records statistics about the ordering of tables, it is advisable to run [`ANALYZE`](analyze.md#sql-analyze) on the newly repacked table. Otherwise, the planner might make poor choices of query plans.
+  <a id="sql-repack-notes-on-resources"></a>
 
-
-### Notes on Resources { #sql-repack-notes-on-resources }
+### Notes on Resources
 
 
  When an index scan or a sequential scan without sort is used, a temporary copy of the table is created that contains the table data in the index order. Temporary copies of each index on the table are created as well. Therefore, you need free space on disk at least equal to the sum of the table size and the index sizes.

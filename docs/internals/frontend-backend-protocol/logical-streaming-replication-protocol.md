@@ -1,19 +1,21 @@
-## Logical Streaming Replication Protocol { #protocol-logical-replication }
+<a id="protocol-logical-replication"></a>
+
+## Logical Streaming Replication Protocol
 
 
  This section describes the logical replication protocol, which is the message flow started by the `START_REPLICATION` `SLOT` *slot_name* `LOGICAL` replication command.
 
 
  The logical streaming replication protocol builds on the primitives of the physical streaming replication protocol.
+ <a id="protocol-logical-replication-params"></a>
 
-
-### Logical Streaming Replication Parameters { #protocol-logical-replication-params }
+### Logical Streaming Replication Parameters
 
 
  The `START_REPLICATION` command can pass options to the logical decoding output plugin associated with the specified replication slot. See [Options](../../server-programming/logical-decoding/logical-decoding-output-plugins.md#logicaldecoding-pgoutput-options) for options that are accepted by the standard (`pgoutput`) plugin.
+  <a id="protocol-logical-messages"></a>
 
-
-### Logical Replication Protocol Messages { #protocol-logical-messages }
+### Logical Replication Protocol Messages
 
 
  The individual protocol messages are discussed in the following subsections. Individual messages are described in [Logical Replication Message Formats](logical-replication-message-formats.md#protocol-logicalrep-message-formats).
@@ -23,9 +25,9 @@
 
 
  Since the streaming replication protocol supplies a message length there is no need for top-level protocol messages to embed a length in their header.
+  <a id="protocol-logical-messages-flow"></a>
 
-
-### Logical Replication Protocol Message Flow { #protocol-logical-messages-flow }
+### Logical Replication Protocol Message Flow
 
 
  With the exception of the `START_REPLICATION` command and the replay progress messages, all information flows only from the backend to the frontend.

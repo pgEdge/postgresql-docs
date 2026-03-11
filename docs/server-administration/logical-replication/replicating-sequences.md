@@ -1,4 +1,6 @@
-## Replicating Sequences { #logical-replication-sequences }
+<a id="logical-replication-sequences"></a>
+
+## Replicating Sequences
 
 
  To synchronize sequences from a publisher to a subscriber, first publish them using [`CREATE PUBLICATION ... FOR ALL SEQUENCES`](../../reference/sql-commands/create-publication.md#sql-createpublication-params-for-all-sequences) and then on the subscriber:
@@ -13,18 +15,18 @@
 
 
  The ability to launch a sequence synchronization worker is limited by the [`max_sync_workers_per_subscription`](../server-configuration/replication.md#guc-max-sync-workers-per-subscription) configuration.
+ <a id="sequence-definition-mismatches"></a>
 
-
-### Sequence Definition Mismatches { #sequence-definition-mismatches }
+### Sequence Definition Mismatches
 
 
  The sequence synchronization worker validates that sequence definitions match between publisher and subscriber. If mismatches exist, the worker logs an error identifying them and exits. The apply worker continues respawning the sequence synchronization worker until synchronization succeeds. See also [`wal_retrieve_retry_interval`](../server-configuration/replication.md#guc-wal-retrieve-retry-interval).
 
 
  To resolve this, use [`ALTER SEQUENCE`](../../reference/sql-commands/alter-sequence.md#sql-altersequence) to align the subscriber's sequence parameters with those of the publisher.
+  <a id="sequences-out-of-sync"></a>
 
-
-### Refreshing Out-of-Sync Sequences { #sequences-out-of-sync }
+### Refreshing Out-of-Sync Sequences
 
 
  Subscriber sequence values will become out of sync as the publisher advances them.
@@ -36,9 +38,9 @@
 !!! warning
 
     Each sequence caches a block of values (typically 32) in memory before generating a new WAL record, so its LSN advances only after the entire cached batch has been consumed. As a result, sequence value drift cannot be detected by LSN comparison when sequence increments fall within the same cached block (typically 32 values).
+  <a id="logical-replication-sequences-examples"></a>
 
-
-### Examples { #logical-replication-sequences-examples }
+### Examples
 
 
  Create some sequences on the publisher.

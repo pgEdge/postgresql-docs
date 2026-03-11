@@ -1,4 +1,6 @@
-# ALTER FOREIGN TABLE { #sql-alterforeigntable }
+<a id="sql-alterforeigntable"></a>
+
+# ALTER FOREIGN TABLE
 
 change the definition of a foreign table
 
@@ -42,9 +44,9 @@ where ACTION is one of:
     OWNER TO { NEW_OWNER | CURRENT_ROLE | CURRENT_USER | SESSION_USER }
     OPTIONS ( [ ADD | SET | DROP ] OPTION ['VALUE'] [, ... ])
 ```
+ <a id="sql-alterforeigntable-description"></a>
 
-
-## Description { #sql-alterforeigntable-description }
+## Description
 
 
  `ALTER FOREIGN TABLE` changes the definition of an existing foreign table. There are several subforms:
@@ -137,9 +139,9 @@ where ACTION is one of:
 
 
  You must own the table to use `ALTER FOREIGN TABLE`. To change the schema of a foreign table, you must also have `CREATE` privilege on the new schema. To alter the owner, you must be able to `SET ROLE` to the new owning role, and that role must have `CREATE` privilege on the table's schema. (These restrictions enforce that altering the owner doesn't do anything you couldn't do by dropping and recreating the table. However, a superuser can alter ownership of any table anyway.) To add a column or alter a column type, you must also have `USAGE` privilege on the data type.
+ <a id="sql-alterforeigntable-parameters"></a>
 
-
-## Parameters { #sql-alterforeigntable-parameters }
+## Parameters
 
 
 <a id="sql-alterforeigntable-parms-name"></a>
@@ -202,9 +204,9 @@ where ACTION is one of:
 
 *new_schema*
 :   The name of the schema to which the table will be moved.
+ <a id="sql-alterforeigntable-notes"></a>
 
-
-## Notes { #sql-alterforeigntable-notes }
+## Notes
 
 
  The key word `COLUMN` is noise and can be omitted.
@@ -214,9 +216,9 @@ where ACTION is one of:
 
 
  Refer to [`CREATE FOREIGN TABLE`](create-foreign-table.md#sql-createforeigntable) for a further description of valid parameters.
+ <a id="sql-alterforeigntable-examples"></a>
 
-
-## Examples { #sql-alterforeigntable-examples }
+## Examples
 
 
  To mark a column as not-null:
@@ -233,9 +235,9 @@ ALTER FOREIGN TABLE distributors ALTER COLUMN street SET NOT NULL;
 
 ALTER FOREIGN TABLE myschema.distributors OPTIONS (ADD opt1 'value', SET opt2 'value2', DROP opt3);
 ```
+ <a id="sql-alterforeigntable-compatibility"></a>
 
-
-## Compatibility { #sql-alterforeigntable-compatibility }
+## Compatibility
 
 
  The forms `ADD`, `DROP`, and `SET DATA TYPE` conform with the SQL standard. The other forms are PostgreSQL extensions of the SQL standard. Also, the ability to specify more than one manipulation in a single `ALTER FOREIGN TABLE` command is an extension.

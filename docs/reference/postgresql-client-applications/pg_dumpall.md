@@ -1,4 +1,6 @@
-# pg_dumpall { #app-pg-dumpall }
+<a id="app-pg-dumpall"></a>
+
+# pg_dumpall
 
 export a PostgreSQL database cluster as an SQL script or to other formats
 
@@ -8,9 +10,9 @@ export a PostgreSQL database cluster as an SQL script or to other formats
 ```
 pg_dumpall [CONNECTION-OPTION...] [OPTION...]
 ```
+ <a id="app-pg-dumpall-description"></a>
 
-
-## Description { #app-pg-dumpall-description }
+## Description
 
 
  pg_dumpall is a utility for writing out (“dumping”) all PostgreSQL databases of a cluster into an SQL script file or an archive. The output contains SQL commands that can be used as input to [app-psql](psql.md#app-psql) to restore the databases. It does this by calling [app-pgdump](pg_dump.md#app-pgdump) for each database in the cluster. pg_dumpall also dumps global objects that are common to all databases, namely database roles, tablespaces, and privilege grants for configuration parameters. (pg_dump does not save these objects.)
@@ -284,9 +286,9 @@ pg_dumpall [CONNECTION-OPTION...] [OPTION...]
 
 
  It is generally recommended to use the `-X` (`--no-psqlrc`) option when restoring a database from a pg_dumpall script to ensure a clean restore process and prevent potential conflicts with non-default psql configurations. Additionally, because the pg_dumpall script may include psql meta-commands, it may be incompatible with clients other than psql.
+ <a id="app-pg-dumpall-ex"></a>
 
-
-## Examples { #app-pg-dumpall-ex }
+## Examples
 
 
  To dump all databases in plain text format (the default):

@@ -1,13 +1,15 @@
-## Platform-Specific Notes { #installation-platform-notes }
+<a id="installation-platform-notes"></a>
+
+## Platform-Specific Notes
 
 
  This section documents additional platform-specific issues regarding the installation and setup of PostgreSQL. Be sure to read the installation instructions, and in particular [Requirements](requirements.md#install-requirements) as well. Also, check [Regression Tests](../regression-tests/index.md#regress) regarding the interpretation of regression test results.
 
 
  Platforms that are not covered here have no known platform-specific installation issues.
+ <a id="installation-notes-aix"></a>
 
-
-### AIX { #installation-notes-aix }
+### AIX
 
 
  You must use GCC to build PostgreSQL on AIX. The native IBM compiler `xlc` is not supported.
@@ -24,9 +26,9 @@ meson setup ...
 
 
  AIX versions before 7.2 are no longer tested nor supported by the PostgreSQL community.
+  <a id="installation-notes-cygwin"></a>
 
-
-### Cygwin { #installation-notes-cygwin }
+### Cygwin
 
 
  PostgreSQL can be built using Cygwin, a Linux-like environment for Windows, but that method is inferior to the native Windows build and running a server under Cygwin is no longer recommended.
@@ -50,9 +52,9 @@ make MAX_CONNECTIONS=5 check
 
 
  It is possible to install `cygserver` and the PostgreSQL server as Windows NT services. For information on how to do this, please refer to the `README` document included with the PostgreSQL binary package on Cygwin. It is installed in the directory `/usr/share/doc/Cygwin`.
+  <a id="installation-notes-macos"></a>
 
-
-### macOS { #installation-notes-macos }
+### macOS
 
 
  To build PostgreSQL from source on macOS, you will need to install Apple's command line developer tools, which can be done by issuing
@@ -98,36 +100,36 @@ xcrun --show-sdk-path
 
 
  macOS's “System Integrity Protection” (SIP) feature breaks `make check`, because it prevents passing the needed setting of `DYLD_LIBRARY_PATH` down to the executables being tested. You can work around that by doing `make install` before `make check`. Most PostgreSQL developers just turn off SIP, though.
+  <a id="installation-notes-mingw"></a>
 
-
-### MinGW { #installation-notes-mingw }
+### MinGW
 
 
  PostgreSQL for Windows can be built using MinGW, a Unix-like build environment for Windows. It is recommended to use the [MSYS2](https://www.msys2.org/) environment for this and also to install any prerequisite packages.
+ <a id="mingw-crash-dumps"></a>
 
-
-#### Collecting Crash Dumps { #mingw-crash-dumps }
+#### Collecting Crash Dumps
 
 
  If PostgreSQL on Windows crashes, it has the ability to generate minidumps that can be used to track down the cause for the crash, similar to core dumps on Unix. These dumps can be read using the Windows Debugger Tools or using Visual Studio. To enable the generation of dumps on Windows, create a subdirectory named `crashdumps` inside the cluster data directory. The dumps will then be written into this directory with a unique name based on the identifier of the crashing process and the current time of the crash.
+   <a id="installation-notes-solaris"></a>
 
-
-### Solaris { #installation-notes-solaris }
+### Solaris
 
 
  PostgreSQL is well-supported on Solaris. The more up to date your operating system, the fewer issues you will experience.
+ <a id="installation-notes-solaris-req-tools"></a>
 
-
-#### Required Tools { #installation-notes-solaris-req-tools }
+#### Required Tools
 
 
  Only GCC is supported as the compiler. Sun's compiler suite is no longer supported.
 
 
  Many additional dependencies can be installed via the package management system.
+  <a id="installation-notes-solaris-configure-complains"></a>
 
-
-#### configure Complains About a Failed Test Program { #installation-notes-solaris-configure-complains }
+#### configure Complains About a Failed Test Program
 
 
  If `configure` complains about a failed test program, this is probably a case of the run-time linker being unable to find some library, probably libz, libreadline or some other non-standard library such as libssl. To point it to the right location, set the `LDFLAGS` environment variable on the `configure` command line, e.g.,
@@ -137,15 +139,15 @@ xcrun --show-sdk-path
 configure ... LDFLAGS="-R /usr/sfw/lib:/opt/sfw/lib:/usr/local/lib"
 ```
  See the `ld`(1) man page for more information.
+  <a id="installation-notes-solaris-using-dtrace"></a>
 
-
-#### Using DTrace for Tracing PostgreSQL { #installation-notes-solaris-using-dtrace }
+#### Using DTrace for Tracing PostgreSQL
 
 
  Yes, using DTrace is possible. See [Dynamic Tracing](../monitoring-database-activity/dynamic-tracing.md#dynamic-trace) for further information.
+   <a id="installation-notes-visual-studio"></a>
 
-
-### Visual Studio { #installation-notes-visual-studio }
+### Visual Studio
 
 
  It is recommended that most users download the binary distribution for Windows, available as a graphical installer package from the PostgreSQL website at [https://www.postgresql.org/download/](https://www.postgresql.org/download/). Building from source is only intended for people developing PostgreSQL or extensions.
@@ -167,9 +169,9 @@ configure ... LDFLAGS="-R /usr/sfw/lib:/opt/sfw/lib:/usr/local/lib"
 
 
  You must always include the Windows Headers and Libraries part of the SDK. If you install a Windows SDK including the Visual C++ Compilers, you don't need Visual Studio to build. Note that as of Version 8.0a the Windows SDK no longer ships with a complete command-line build environment.
+ <a id="windows-requirements"></a>
 
-
-#### Requirements { #windows-requirements }
+#### Requirements
 
 
  The following additional products are required to build PostgreSQL on Windows.
@@ -216,8 +218,9 @@ Python
 zlib
 :   Required for compression support in pg_dump and pg_restore. Binaries can be downloaded from [https://www.zlib.net](https://www.zlib.net).
 
+  <a id="install-windows-full-64-bit"></a>
 
-#### Special Considerations for 64-Bit Windows { #install-windows-full-64-bit }
+#### Special Considerations for 64-Bit Windows
 
 
  PostgreSQL will only build for the x64 and AArch64 architectures on 64-bit Windows.
@@ -227,9 +230,9 @@ zlib
 
 
  To use a server-side third party library such as Python or OpenSSL, this library *must* also be 64-bit. There is no support for loading a 32-bit library in a 64-bit server. Several of the third party libraries that PostgreSQL supports may only be available in 32-bit versions, in which case they cannot be used with 64-bit PostgreSQL.
+  <a id="windows-crash-dumps"></a>
 
-
-#### Collecting Crash Dumps { #windows-crash-dumps }
+#### Collecting Crash Dumps
 
 
  If PostgreSQL on Windows crashes, it has the ability to generate minidumps that can be used to track down the cause for the crash, similar to core dumps on Unix. These dumps can be read using the Windows Debugger Tools or using Visual Studio. To enable the generation of dumps on Windows, create a subdirectory named `crashdumps` inside the cluster data directory. The dumps will then be written into this directory with a unique name based on the identifier of the crashing process and the current time of the crash.

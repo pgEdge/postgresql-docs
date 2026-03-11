@@ -1,4 +1,6 @@
-# PostgreSQL 19devel Documentation { #postgres }
+<a id="postgres"></a>
+
+# PostgreSQL 19devel Documentation
 
 *The PostgreSQL Global Development Group*
 

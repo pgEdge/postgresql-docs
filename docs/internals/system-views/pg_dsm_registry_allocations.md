@@ -1,4 +1,6 @@
-## `pg_dsm_registry_allocations` { #view-pg-dsm-registry-allocations }
+<a id="view-pg-dsm-registry-allocations"></a>
+
+## `pg_dsm_registry_allocations`
 
 
  The `pg_dsm_registry_allocations` view shows shared memory allocations tracked in the dynamic shared memory (DSM) registry. This includes memory allocated by extensions using the mechanisms detailed in [Requesting Shared Memory After Startup](../../server-programming/extending-sql/c-language-functions.md#xfunc-shared-addin-after-startup).

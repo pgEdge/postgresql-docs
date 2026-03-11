@@ -1,10 +1,11 @@
-## Sequence Manipulation Functions { #functions-sequence }
+<a id="functions-sequence"></a>
+
+## Sequence Manipulation Functions
 
 
  This section describes functions for operating on *sequence objects*, also called sequence generators or just sequences. Sequence objects are special single-row tables created with [sql-createsequence](../../reference/sql-commands/create-sequence.md#sql-createsequence). Sequence objects are commonly used to generate unique identifiers for rows of a table. The sequence functions, listed in [Sequence Functions](#functions-sequence-table), provide simple, multiuser-safe methods for obtaining successive sequence values from sequence objects.
+ <a id="functions-sequence-table"></a>
 
-
-<a id="functions-sequence-table"></a>
 **Table: Sequence Functions**
 
 <table>
@@ -39,7 +40,7 @@ SELECT setval('myseq', 42, false);    Next nextval will return 42</code></pre></
 <td>Returns the value most recently returned by <code>nextval</code> in the current session. This function is identical to <code>currval</code>, except that instead of taking the sequence name as an argument it refers to whichever sequence <code>nextval</code> was most recently applied to in the current session. It is an error to call <code>lastval</code> if <code>nextval</code> has not yet been called in the current session.</td>
 <td>This function requires <code>USAGE</code> or <code>SELECT</code> privilege on the last used sequence.</td>
 </tr>
-<tr>
+<tr id="func-pg-get-sequence-data">
 <td><code>pg_get_sequence_data</code> ( <code>regclass</code> ) <code>record</code> ( <code>last_value</code> <code>bigint</code>, <code>is_called</code> <code>bool</code>, <code>page_lsn</code> <code>pg_lsn</code> )</td>
 <td>Returns information about the sequence. <code>last_value</code> is the last sequence value written to disk. If caching is used, this value can be greater than the last value handed out from the sequence. <code>is_called</code> indicates whether the sequence has been used. <code>page_lsn</code> is the LSN corresponding to the most recent WAL record that modified this sequence relation.</td>
 <td>This function is primarily intended for internal use by pg_dump and by logical replication to synchronize sequences. It requires <code>USAGE</code> or <code>SELECT</code> privilege on the sequence.</td>

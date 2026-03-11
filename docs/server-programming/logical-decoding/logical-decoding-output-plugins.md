@@ -1,16 +1,18 @@
-## Logical Decoding Output Plugins { #logicaldecoding-output-plugin }
+<a id="logicaldecoding-output-plugin"></a>
+
+## Logical Decoding Output Plugins
 
 
  PostgreSQL provides two logical decoding output plugins, [pgoutput](#logicaldecoding-pgoutput) and [test_decoding](../../appendixes/additional-supplied-modules-and-extensions/test_decoding-sql-based-test-example-module-for-wal-logical-decoding.md#test-decoding). You can also develop custom output plugins (see [Writing Logical Decoding Output Plugins](writing-logical-decoding-output-plugins.md#logicaldecoding-output-plugin-writing) for details).
+ <a id="logicaldecoding-pgoutput"></a>
 
-
-### pgoutput — Standard Logical Decoding Output Plugin { #logicaldecoding-pgoutput }
+### pgoutput — Standard Logical Decoding Output Plugin
 
 
  `pgoutput` is the standard logical decoding output plugin provided by PostgreSQL. It's used for the built-in [logical replication](../../server-administration/logical-replication/index.md#logical-replication).
+ <a id="logicaldecoding-pgoutput-options"></a>
 
-
-#### Options { #logicaldecoding-pgoutput-options }
+#### Options
 
 
 <a id="pgoutput-options-proto-version"></a>
@@ -59,9 +61,9 @@
 
 `origin` (`enum`)
 :   Specifies whether to send changes by their origin. Possible values are `none` to only send the changes that have no origin associated, or `any` to send the changes regardless of their origin. This can be used to avoid loops (infinite replication of the same data) among replication nodes. The default is `any`.
+  <a id="logicaldecoding-pgoutput-notes"></a>
 
-
-#### Notes { #logicaldecoding-pgoutput-notes }
+#### Notes
 
 
  `pgoutput` produces binary output, so functions expecting textual data ( `[pg_logical_slot_peek_changes](../../the-sql-language/functions-and-operators/system-administration-functions.md#pg-logical-slot-peek-changes)` and `[pg_logical_slot_get_changes](../../the-sql-language/functions-and-operators/system-administration-functions.md#pg-logical-slot-get-changes)`) cannot be used with it. Use `[pg_logical_slot_peek_binary_changes](../../the-sql-language/functions-and-operators/system-administration-functions.md#pg-logical-slot-peek-binary-changes)` or `[pg_logical_slot_get_binary_changes](../../the-sql-language/functions-and-operators/system-administration-functions.md#pg-logical-slot-get-binary-changes)` instead.

@@ -1,4 +1,6 @@
-## Release 19 { #release-19 }
+<a id="release-19"></a>
+
+## Release 19
 
 
 **Release date:.**

@@ -1,4 +1,6 @@
-## `pg_publication_sequences` { #view-pg-publication-sequences }
+<a id="view-pg-publication-sequences"></a>
+
+## `pg_publication_sequences`
 
 
  The view `pg_publication_sequences` provides information about the mapping between publications and sequences.

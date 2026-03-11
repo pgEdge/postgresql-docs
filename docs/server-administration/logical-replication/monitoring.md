@@ -1,4 +1,6 @@
-## Monitoring { #logical-replication-monitoring }
+<a id="logical-replication-monitoring"></a>
+
+## Monitoring
 
 
  Because streaming logical replication is based on a similar architecture as [streaming physical replication](../high-availability-load-balancing-and-replication/log-shipping-standby-servers.md#streaming-replication), the monitoring on a publication node is similar to monitoring of a physical replication primary (see [Monitoring](../high-availability-load-balancing-and-replication/log-shipping-standby-servers.md#streaming-replication-monitoring)).

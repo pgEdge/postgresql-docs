@@ -1,4 +1,6 @@
-# CREATE FOREIGN TABLE { #sql-createforeigntable }
+<a id="sql-createforeigntable"></a>
+
+# CREATE FOREIGN TABLE
 
 define a new foreign table
 
@@ -55,9 +57,9 @@ FROM ( { PARTITION_BOUND_EXPR | MINVALUE | MAXVALUE } [, ...] )
   TO ( { PARTITION_BOUND_EXPR | MINVALUE | MAXVALUE } [, ...] ) |
 WITH ( MODULUS NUMERIC_LITERAL, REMAINDER NUMERIC_LITERAL )
 ```
+ <a id="sql-createforeigntable-description"></a>
 
-
-## Description { #sql-createforeigntable-description }
+## Description
 
 
  `CREATE FOREIGN TABLE` creates a new foreign table in the current database. The table will be owned by the user issuing the command.
@@ -73,9 +75,9 @@ WITH ( MODULUS NUMERIC_LITERAL, REMAINDER NUMERIC_LITERAL )
 
 
  To be able to create a foreign table, you must have `USAGE` privilege on the foreign server, as well as `USAGE` privilege on all column types used in the table.
+ <a id="sql-createforeigntable-parameters"></a>
 
-
-## Parameters { #sql-createforeigntable-parameters }
+## Parameters
 
 
 <a id="sql-createforeigntable-parms-if-not-exists"></a>
@@ -198,9 +200,9 @@ WITH ( MODULUS NUMERIC_LITERAL, REMAINDER NUMERIC_LITERAL )
 
 <code>OPTIONS ( </code><em>option</em><code> '</code><em>value</em><code>' [, ...] )</code>
 :   Options to be associated with the new foreign table or one of its columns. The allowed option names and values are specific to each foreign data wrapper and are validated using the foreign-data wrapper's validator function. Duplicate option names are not allowed (although it's OK for a table option and a column option to have the same name).
+ <a id="sql-createforeigntable-notes"></a>
 
-
-## Notes { #sql-createforeigntable-notes }
+## Notes
 
 
  Constraints on foreign tables (such as `CHECK` or `NOT NULL` clauses) are not enforced by the core PostgreSQL system, and most foreign data wrappers do not attempt to enforce them either; that is, the constraint is simply assumed to hold true. There would be little point in such enforcement since it would only apply to rows inserted or updated via the foreign table, and not to rows modified by other means, such as directly on the remote server. Instead, a constraint attached to a foreign table should represent a constraint that is being enforced by the remote server.
@@ -221,9 +223,9 @@ WITH ( MODULUS NUMERIC_LITERAL, REMAINDER NUMERIC_LITERAL )
 
 
  Similar considerations apply to generated columns. Stored generated columns are computed on insert or update on the local PostgreSQL server and handed to the foreign-data wrapper for writing out to the foreign data store, but it is not enforced that a query of the foreign table returns values for stored generated columns that are consistent with the generation expression. Again, this might result in incorrect query results.
+ <a id="sql-createforeigntable-examples"></a>
 
-
-## Examples { #sql-createforeigntable-examples }
+## Examples
 
 
  Create foreign table `films`, which will be accessed through the server `film_server`:
@@ -250,9 +252,9 @@ CREATE FOREIGN TABLE measurement_y2016m07
     PARTITION OF measurement FOR VALUES FROM ('2016-07-01') TO ('2016-08-01')
     SERVER server_07;
 ```
+ <a id="sql-createforeigntable-compatibility"></a>
 
-
-## Compatibility { #sql-createforeigntable-compatibility }
+## Compatibility
 
 
  The `CREATE FOREIGN TABLE` command largely conforms to the SQL standard; however, much as with [`CREATE TABLE`](create-table.md#sql-createtable), `NULL` constraints and zero-column foreign tables are permitted. The ability to specify column default values is also a PostgreSQL extension. Table inheritance, in the form defined by PostgreSQL, is nonstandard. The `LIKE` clause, as supported in this command, is nonstandard.

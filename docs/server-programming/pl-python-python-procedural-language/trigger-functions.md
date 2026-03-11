@@ -1,4 +1,6 @@
-## Trigger Functions { #plpython-trigger }
+<a id="plpython-trigger"></a>
+
+## Trigger Functions
 
 
  PL/Python can be used to define trigger functions. PostgreSQL requires that a function that is to be called as a trigger must be declared as a function with no arguments and a return type of `trigger`.
