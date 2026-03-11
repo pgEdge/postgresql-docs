@@ -1,4 +1,6 @@
-# B-Tree Indexes { #btree }
+<a id="btree"></a>
+
+# B-Tree Indexes
 
 - [Introduction](introduction.md#btree-intro)
 - [Behavior of B-Tree Operator Classes](behavior-of-b-tree-operator-classes.md#btree-behavior)

@@ -1,4 +1,6 @@
-## Building with Visual C++ or the Microsoft Windows SDK { #install-windows-full }
+<a id="install-windows-full"></a>
+
+## Building with Visual C++ or the Microsoft Windows SDK
 
 
  PostgreSQL can be built using the Visual C++ compiler suite from Microsoft. These compilers can be either from Visual Studio, Visual Studio Express or some versions of the Microsoft Windows SDK. If you do not already have a Visual Studio environment set up, the easiest ways are to use the compilers from Visual Studio 2022 or those in the Windows SDK 10, which are both free downloads from Microsoft.
@@ -34,8 +36,9 @@ $ENV{PATH}=$ENV{PATH} . ';c:\some\where\bison\bin';
 $ENV{MSBFLAGS}="/m";
 ```
 
+ <a id="install-windows-full-requirements"></a>
 
-### Requirements { #install-windows-full-requirements }
+### Requirements
 
 
  The following additional products are required to build PostgreSQL. Use the `config.pl` file to specify which directories the libraries are available in.
@@ -99,8 +102,9 @@ Python
 zlib
 :   Required for compression support in pg_dump and pg_restore. Binaries can be downloaded from [https://www.zlib.net](https://www.zlib.net).
 
+  <a id="install-windows-full-64-bit"></a>
 
-### Special Considerations for 64-Bit Windows { #install-windows-full-64-bit }
+### Special Considerations for 64-Bit Windows
 
 
  PostgreSQL will only build for the x64 architecture on 64-bit Windows.
@@ -110,9 +114,9 @@ zlib
 
 
  To use a server-side third party library such as Python or OpenSSL, this library *must* also be 64-bit. There is no support for loading a 32-bit library in a 64-bit server. Several of the third party libraries that PostgreSQL supports may only be available in 32-bit versions, in which case they cannot be used with 64-bit PostgreSQL.
+  <a id="install-windows-full-build"></a>
 
-
-### Building { #install-windows-full-build }
+### Building
 
 
  To build all of PostgreSQL in release configuration (the default), run the command:
@@ -149,9 +153,9 @@ $ENV{CONFIG}="Debug";
 perl mkvcbuild.pl
 ```
  from the command prompt, and then open the generated `pgsql.sln` (in the root directory of the source tree) in Visual Studio.
+  <a id="install-windows-full-clean-inst"></a>
 
-
-### Cleaning and Installing { #install-windows-full-clean-inst }
+### Cleaning and Installing
 
 
  Most of the time, the automatic dependency tracking in Visual Studio will handle changed files. But if there have been large changes, you may need to clean the installation. To do this, simply run the `clean.bat` command, which will automatically clean out all generated files. You can also run it with the `dist` parameter, in which case it will behave like `make distclean` and remove the flex/bison output files as well.
@@ -172,8 +176,9 @@ install c:\destination\directory
 install c:\destination\directory client
 ```
 
+  <a id="install-windows-full-reg-tests"></a>
 
-### Running the Regression Tests { #install-windows-full-reg-tests }
+### Running the Regression Tests
 
 
  To run the regression tests, make sure you have completed the build of all required parts first. Also, make sure that the DLLs required to load all parts of the system (such as the Perl and Python DLLs for the procedural languages) are present in the system path. If they are not, set it through the `buildenv.pl` file. To run the tests, run one of the following commands from the `src\tools\msvc` directory:

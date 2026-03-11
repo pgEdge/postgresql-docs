@@ -1,4 +1,6 @@
-## Canceling Queries in Progress { #libpq-cancel }
+<a id="libpq-cancel"></a>
+
+## Canceling Queries in Progress
 
 
  A client application can request cancellation of a command that is still being processed by the server, using the functions described in this section.

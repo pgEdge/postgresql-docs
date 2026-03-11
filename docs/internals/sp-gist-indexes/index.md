@@ -1,4 +1,6 @@
-# SP-GiST Indexes { #spgist }
+<a id="spgist"></a>
+
+# SP-GiST Indexes
 
 - [Introduction](introduction.md#spgist-intro)
 - [Built-in Operator Classes](built-in-operator-classes.md#spgist-builtin-opclasses)

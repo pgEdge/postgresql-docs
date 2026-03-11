@@ -1,4 +1,6 @@
-## Release 16.3 { #release-16-3 }
+<a id="release-16-3"></a>
+
+## Release 16.3
 
 
 **Release date:.**
@@ -8,9 +10,9 @@
 
 
  This release contains a variety of fixes from 16.2. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-3-migration"></a>
 
-
-### Migration to Version 16.3 { #release-16-3-migration }
+### Migration to Version 16.3
 
 
  A dump/restore is not required for those running 16.X.
@@ -20,9 +22,9 @@
 
 
  Also, if you are upgrading from a version earlier than 16.2, see [Release 16.2](release-16-2.md#release-16-2).
+  <a id="release-16-3-changes"></a>
 
-
-### Changes { #release-16-3-changes }
+### Changes
 
 
 -  Restrict visibility of `pg_stats_ext` and `pg_stats_ext_exprs` entries to the table owner (Nathan Bossart) [&sect;](https://postgr.es/c/2485a85e9)

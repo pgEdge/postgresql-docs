@@ -1,4 +1,6 @@
-## Release 16.1 { #release-16-1 }
+<a id="release-16-1"></a>
+
+## Release 16.1
 
 
 **Release date:.**
@@ -8,18 +10,18 @@
 
 
  This release contains a variety of fixes from 16.0. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-1-migration"></a>
 
-
-### Migration to Version 16.1 { #release-16-1-migration }
+### Migration to Version 16.1
 
 
  A dump/restore is not required for those running 16.X.
 
 
  However, several mistakes have been discovered that could lead to certain types of indexes yielding wrong search results or being unnecessarily inefficient. It is advisable to `REINDEX` potentially-affected indexes after installing this update. See the fourth through seventh changelog entries below.
+  <a id="release-16-1-changes"></a>
 
-
-### Changes { #release-16-1-changes }
+### Changes
 
 
 -  Fix handling of unknown-type arguments in `DISTINCT` `"any"` aggregate functions (Tom Lane) [&sect;](https://postgr.es/c/d3d1e2509)

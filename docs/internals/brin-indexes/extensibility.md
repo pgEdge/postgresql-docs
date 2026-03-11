@@ -1,4 +1,6 @@
-## Extensibility { #brin-extensibility }
+<a id="brin-extensibility"></a>
+
+## Extensibility
 
 
  The BRIN interface has a high level of abstraction, requiring the access method implementer only to implement the semantics of the data type being accessed. The BRIN layer itself takes care of concurrency, logging and searching the index structure.
@@ -56,9 +58,8 @@
 
 
  To write an operator class for a data type that implements a totally ordered set, it is possible to use the minmax support functions alongside the corresponding operators, as shown in [Function and Support Numbers for Minmax Operator Classes](#brin-extensibility-minmax-table). All operator class members (functions and operators) are mandatory.
+ <a id="brin-extensibility-minmax-table"></a>
 
-
-<a id="brin-extensibility-minmax-table"></a>
 **Table: Function and Support Numbers for Minmax Operator Classes**
 
 | Operator class member | Object |
@@ -75,9 +76,8 @@
 
 
  To write an operator class for a complex data type which has values included within another type, it's possible to use the inclusion support functions alongside the corresponding operators, as shown in [Function and Support Numbers for Inclusion Operator Classes](#brin-extensibility-inclusion-table). It requires only a single additional function, which can be written in any language. More functions can be defined for additional functionality. All operators are optional. Some operators require other operators, as shown as dependencies on the table.
+ <a id="brin-extensibility-inclusion-table"></a>
 
-
-<a id="brin-extensibility-inclusion-table"></a>
 **Table: Function and Support Numbers for Inclusion Operator Classes**
 
 | Operator class member | Object | Dependency |
@@ -115,9 +115,8 @@
 
 
  To write an operator class for a data type that implements only an equality operator and supports hashing, it is possible to use the bloom support procedures alongside the corresponding operators, as shown in [Procedure and Support Numbers for Bloom Operator Classes](#brin-extensibility-bloom-table). All operator class members (procedures and operators) are mandatory.
+ <a id="brin-extensibility-bloom-table"></a>
 
-
-<a id="brin-extensibility-bloom-table"></a>
 **Table: Procedure and Support Numbers for Bloom Operator Classes**
 
 | Operator class member | Object |
@@ -135,9 +134,8 @@
 
 
  The minmax-multi operator class is also intended for data types implementing a totally ordered set, and may be seen as a simple extension of the minmax operator class. While minmax operator class summarizes values from each block range into a single contiguous interval, minmax-multi allows summarization into multiple smaller intervals to improve handling of outlier values. It is possible to use the minmax-multi support procedures alongside the corresponding operators, as shown in [Procedure and Support Numbers for minmax-multi Operator Classes](#brin-extensibility-minmax-multi-table). All operator class members (procedures and operators) are mandatory.
+ <a id="brin-extensibility-minmax-multi-table"></a>
 
-
-<a id="brin-extensibility-minmax-multi-table"></a>
 **Table: Procedure and Support Numbers for minmax-multi Operator Classes**
 
 | Operator class member | Object |

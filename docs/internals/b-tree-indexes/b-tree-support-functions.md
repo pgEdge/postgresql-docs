@@ -1,4 +1,6 @@
-## B-Tree Support Functions { #btree-support-funcs }
+<a id="btree-support-funcs"></a>
+
+## B-Tree Support Functions
 
 
  As shown in [B-Tree Support Functions](../../server-programming/extending-sql/interfacing-extensions-to-indexes.md#xindex-btree-support-table), btree defines one required and four optional support functions. The five user-defined methods are:

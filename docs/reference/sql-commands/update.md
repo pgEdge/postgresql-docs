@@ -1,4 +1,6 @@
-# UPDATE { #sql-update }
+<a id="sql-update"></a>
+
+# UPDATE
 
 update rows of a table
 

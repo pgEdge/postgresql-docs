@@ -1,4 +1,6 @@
-## Implementation { #hash-implementation }
+<a id="hash-implementation"></a>
+
+## Implementation
 
 
  There are four kinds of pages in a hash index: the meta page (page zero), which contains statically allocated control information; primary bucket pages; overflow pages; and bitmap pages, which keep track of overflow pages that have been freed and are available for re-use. For addressing purposes, bitmap pages are regarded as a subset of the overflow pages.

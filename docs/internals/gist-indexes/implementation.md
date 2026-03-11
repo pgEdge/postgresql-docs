@@ -1,7 +1,9 @@
-## Implementation { #gist-implementation }
+<a id="gist-implementation"></a>
 
+## Implementation
+  <a id="gist-buffering-build"></a>
 
-### GiST Index Build Methods { #gist-buffering-build }
+### GiST Index Build Methods
 
 
  The simplest way to build a GiST index is just to insert all the entries, one by one. This tends to be slow for large indexes, because if the index tuples are scattered across the index and the index is large enough to not fit in cache, a lot of random I/O will be needed. PostgreSQL supports two alternative methods for initial build of a GiST index: *sorted* and *buffered* modes.

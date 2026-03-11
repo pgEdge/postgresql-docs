@@ -1,4 +1,6 @@
-## Release 16.2 { #release-16-2 }
+<a id="release-16-2"></a>
+
+## Release 16.2
 
 
 **Release date:.**
@@ -8,9 +10,9 @@
 
 
  This release contains a variety of fixes from 16.1. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-2-migration"></a>
 
-
-### Migration to Version 16.2 { #release-16-2-migration }
+### Migration to Version 16.2
 
 
  A dump/restore is not required for those running 16.X.
@@ -20,9 +22,9 @@
 
 
  Also, if you are upgrading from a version earlier than 16.1, see [Release 16.1](release-16-1.md#release-16-1).
+  <a id="release-16-2-changes"></a>
 
-
-### Changes { #release-16-2-changes }
+### Changes
 
 
 -  Tighten security restrictions within `REFRESH MATERIALIZED VIEW CONCURRENTLY` (Heikki Linnakangas) [&sect;](https://postgr.es/c/d6a61cb3b) [&sect;](https://postgr.es/c/fb3836855)

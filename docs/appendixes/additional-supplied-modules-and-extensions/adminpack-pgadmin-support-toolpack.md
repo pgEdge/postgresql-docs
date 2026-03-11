@@ -1,13 +1,14 @@
-## adminpack — pgAdmin support toolpack { #adminpack }
+<a id="adminpack"></a>
+
+## adminpack — pgAdmin support toolpack
 
 
  `adminpack` provides a number of support functions which pgAdmin and other administration and management tools can use to provide additional functionality, such as remote management of server log files. Use of all these functions is only allowed to database superusers by default, but may be allowed to other users by using the `GRANT` command.
 
 
  The functions shown in [`adminpack` Functions](#functions-adminpack-table) provide write access to files on the machine hosting the server. (See also the functions in [Generic File Access Functions](../../the-sql-language/functions-and-operators/system-administration-functions.md#functions-admin-genfile-table), which provide read-only access.) Only files within the database cluster directory can be accessed, unless the user is a superuser or given privileges of one of the `pg_read_server_files` or `pg_write_server_files` roles, as appropriate for the function, but either a relative or absolute path is allowable.
+ <a id="functions-adminpack-table"></a>
 
-
-<a id="functions-adminpack-table"></a>
 **Table: `adminpack` Functions**
 
 <table>

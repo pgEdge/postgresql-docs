@@ -1,4 +1,6 @@
-# GIN Indexes { #gin }
+<a id="gin"></a>
+
+# GIN Indexes
 
 - [Introduction](introduction.md#gin-intro)
 - [Built-in Operator Classes](built-in-operator-classes.md#gin-builtin-opclasses)

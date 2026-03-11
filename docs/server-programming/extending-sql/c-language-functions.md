@@ -1,13 +1,15 @@
-## C-Language Functions { #xfunc-c }
+<a id="xfunc-c"></a>
+
+## C-Language Functions
 
 
  User-defined functions can be written in C (or a language that can be made compatible with C, such as C++). Such functions are compiled into dynamically loadable objects (also called shared libraries) and are loaded by the server on demand. The dynamic loading feature is what distinguishes “C language” functions from “internal” functions — the actual coding conventions are essentially the same for both. (Hence, the standard internal function library is a rich source of coding examples for user-defined C functions.)
 
 
  Currently only one calling convention is used for C functions (“version 1”). Support for that calling convention is indicated by writing a `PG_FUNCTION_INFO_V1()` macro call for the function, as illustrated below.
+ <a id="xfunc-c-dynload"></a>
 
-
-### Dynamic Loading { #xfunc-c-dynload }
+### Dynamic Loading
 
 
  The first time a user-defined function in a particular loadable object file is called in a session, the dynamic loader loads that object file into memory so that the function can be called. The `CREATE FUNCTION` for a user-defined C function must therefore specify two pieces of information for the function: the name of the loadable object file, and the C name (link symbol) of the specific function to call within that object file. If the C name is not explicitly specified then it is assumed to be the same as the SQL function name.
@@ -48,9 +50,9 @@ PG_MODULE_MAGIC;
 
 
  Optionally, a dynamically loaded file can contain an initialization function. If the file includes a function named `_PG_init`, that function will be called immediately after loading the file. The function receives no parameters and should return void. There is presently no way to unload a dynamically loaded file.
+  <a id="xfunc-c-basetype"></a>
 
-
-### Base Types in C-Language Functions { #xfunc-c-basetype }
+### Base Types in C-Language Functions
 
 
  To know how to write C-language functions, you need to know how PostgreSQL internally represents base data types and how they can be passed to and from functions. Internally, PostgreSQL regards a base type as a “blob of memory”. The user-defined functions that you define over a type in turn define the way that PostgreSQL can operate on it. That is, PostgreSQL will only store and retrieve the data from disk and use your user-defined functions to input, process, and output the data.
@@ -126,9 +128,8 @@ memcpy(destination->data, buffer, 40);
 
 
  [Equivalent C Types for Built-in SQL Types](#xfunc-c-type-table) shows the C types corresponding to many of the built-in SQL data types of PostgreSQL. The “Defined In” column gives the header file that needs to be included to get the type definition. (The actual definition might be in a different file that is included by the listed file. It is recommended that users stick to the defined interface.) Note that you should always include `postgres.h` first in any source file of server code, because it declares a number of things that you will need anyway, and because including other headers first can cause portability issues.
+ <a id="xfunc-c-type-table"></a>
 
-
-<a id="xfunc-c-type-table"></a>
 **Table: Equivalent C Types for Built-in SQL Types**
 
 | SQL Type | C Type | Defined In |
@@ -165,9 +166,9 @@ memcpy(destination->data, buffer, 40);
 
 
  Now that we've gone over all of the possible structures for base types, we can show some examples of real functions.
+  <a id="xfunc-c-v1-call-conv"></a>
 
-
-### Version 1 Calling Conventions { #xfunc-c-v1-call-conv }
+### Version 1 Calling Conventions
 
 
  The version-1 calling convention relies on macros to suppress most of the complexity of passing arguments and results. The C declaration of a version-1 function is always:
@@ -335,9 +336,9 @@ CREATE FUNCTION concat_text(text, text) RETURNS text
 
 
  Finally, the version-1 function call conventions make it possible to return set results ([Returning Sets](#xfunc-c-return-set)) and implement trigger functions ([Triggers](../triggers/index.md#triggers)) and procedural-language call handlers ([Writing a Procedural Language Handler](../../internals/writing-a-procedural-language-handler.md#plhandler)). For more details see `src/backend/utils/fmgr/README` in the source distribution.
+  <a id="xfunc-c-code"></a>
 
-
-### Writing Code { #xfunc-c-code }
+### Writing Code
 
 
  Before we turn to the more advanced topics, we should discuss some coding rules for PostgreSQL C-language functions. While it might be possible to load functions written in languages other than C into PostgreSQL, this is usually difficult (when it is possible at all) because other languages, such as C++, FORTRAN, or Pascal often do not follow the same calling convention as C. That is, other languages do not pass argument and return values between functions in the same way. For this reason, we will assume that your C-language functions are actually written in C.
@@ -353,8 +354,9 @@ CREATE FUNCTION concat_text(text, text) RETURNS text
 -  Most of the internal PostgreSQL types are declared in `postgres.h`, while the function manager interfaces (`PG_FUNCTION_ARGS`, etc.) are in `fmgr.h`, so you will need to include at least these two files. For portability reasons it's best to include `postgres.h` *first*, before any other system or user header files. Including `postgres.h` will also include `elog.h` and `palloc.h` for you.
 -  Symbol names defined within object files must not conflict with each other or with symbols defined in the PostgreSQL server executable. You will have to rename your functions or variables if you get error messages to this effect.
 
+   <a id="dfunc"></a>
 
-### Compiling and Linking Dynamically-Loaded Functions { #dfunc }
+### Compiling and Linking Dynamically-Loaded Functions
 
 
  Before you are able to use your PostgreSQL extension functions written in C, they must be compiled and linked in a special way to produce a file that can be dynamically loaded by the server. To be precise, a *shared library* needs to be created.
@@ -441,9 +443,9 @@ CREATE FUNCTION concat_text(text, text) RETURNS text
 
 
  Refer back to [Dynamic Loading](#xfunc-c-dynload) about where the server expects to find the shared library files.
+   <a id="xfunc-c-composite-type-args"></a>
 
-
-### Composite-Type Arguments { #xfunc-c-composite-type-args }
+### Composite-Type Arguments
 
 
  Composite types do not have a fixed layout like C structures. Instances of a composite type can contain null fields. In addition, composite types that are part of an inheritance hierarchy can have different fields than other members of the same inheritance hierarchy. Therefore, PostgreSQL provides a function interface for accessing fields of composite types from C.
@@ -501,9 +503,9 @@ CREATE FUNCTION c_overpaid(emp, integer) RETURNS boolean
     LANGUAGE C STRICT;
 ```
  Notice we have used `STRICT` so that we did not have to check whether the input arguments were NULL.
+  <a id="xfunc-c-returning-rows"></a>
 
-
-### Returning Rows (Composite Types) { #xfunc-c-returning-rows }
+### Returning Rows (Composite Types)
 
 
  To return a row or composite-type value from a C-language function, you can use a special API that provides macros and functions to hide most of the complexity of building composite data types. To use this API, the source file must include:
@@ -596,9 +598,9 @@ HeapTupleGetDatum(HeapTuple tuple)
 
 
  An example appears in the next section.
+  <a id="xfunc-c-return-set"></a>
 
-
-### Returning Sets { #xfunc-c-return-set }
+### Returning Sets
 
 
  C-language functions have two options for returning sets (multiple rows). In one method, called *ValuePerCall* mode, a set-returning function is called repeatedly (passing the same arguments each time) and it returns one new row on each call, until it has no more rows to return and signals that by returning NULL. The set-returning function (SRF) must therefore save enough state across calls to remember what it was doing and return the correct next item on each call. In the other method, called *Materialize* mode, an SRF fills and returns a tuplestore object containing its entire result; then only one call occurs for the whole result, and no inter-call state is needed.
@@ -884,9 +886,9 @@ CREATE OR REPLACE FUNCTION retcomposite(IN integer, IN integer,
     LANGUAGE C IMMUTABLE STRICT;
 ```
  Notice that in this method the output type of the function is formally an anonymous `record` type.
+  <a id="xfunc-c-polymorphic"></a>
 
-
-### Polymorphic Arguments and Return Types { #xfunc-c-polymorphic }
+### Polymorphic Arguments and Return Types
 
 
  C-language functions can be declared to accept and return the polymorphic types described in [Polymorphic Types](the-postgresql-type-system.md#extend-types-polymorphic). When a function's arguments or return types are defined as polymorphic types, the function author cannot know in advance what data type it will be called with, or need to return. There are two routines provided in `fmgr.h` to allow a version-1 C function to discover the actual data types of its arguments and the type it is expected to return. The routines are called `get_fn_expr_rettype(FmgrInfo *flinfo)` and `get_fn_expr_argtype(FmgrInfo *flinfo, int argnum)`. They return the result or argument type OID, or `InvalidOid` if the information is not available. The structure `flinfo` is normally accessed as `fcinfo->flinfo`. The parameter `argnum` is zero based. `get_call_result_type` can also be used as an alternative to `get_fn_expr_rettype`. There is also `get_fn_expr_variadic`, which can be used to find out whether variadic arguments have been merged into an array. This is primarily useful for `VARIADIC "any"` functions, since such merging will always have occurred for variadic functions taking ordinary array types.
@@ -951,9 +953,9 @@ CREATE FUNCTION make_array(anyelement) RETURNS anyarray
 
 
  There is a variant of polymorphism that is only available to C-language functions: they can be declared to take parameters of type `"any"`. (Note that this type name must be double-quoted, since it's also an SQL reserved word.) This works like `anyelement` except that it does not constrain different `"any"` arguments to be the same type, nor do they help determine the function's result type. A C-language function can also declare its final parameter to be `VARIADIC "any"`. This will match one or more actual arguments of any type (not necessarily the same type). These arguments will *not* be gathered into an array as happens with normal variadic functions; they will just be passed to the function separately. The `PG_NARGS()` macro and the methods described above must be used to determine the number of actual arguments and their types when using this feature. Also, users of such a function might wish to use the `VARIADIC` keyword in their function call, with the expectation that the function would treat the array elements as separate arguments. The function itself must implement that behavior if wanted, after using `get_fn_expr_variadic` to detect that the actual argument was marked with `VARIADIC`.
+  <a id="xfunc-shared-addin"></a>
 
-
-### Shared Memory and LWLocks { #xfunc-shared-addin }
+### Shared Memory and LWLocks
 
 
  Add-ins can reserve LWLocks and an allocation of shared memory on server startup. The add-in's shared library must be preloaded by specifying it in [shared_preload_libraries](../../server-administration/server-configuration/client-connection-defaults.md#guc-shared-preload-libraries). The shared library should register a `shmem_request_hook` in its `_PG_init` function. This `shmem_request_hook` can reserve LWLocks or shared memory. Shared memory is reserved by calling:
@@ -999,8 +1001,9 @@ if (!ptr)
 }
 ```
 
+  <a id="extend-cpp"></a>
 
-### Using C++ for Extensibility { #extend-cpp }
+### Using C++ for Extensibility
 
 
  Although the PostgreSQL backend is written in C, it is possible to write extensions in C++ if these guidelines are followed:

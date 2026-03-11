@@ -1,4 +1,6 @@
-# CREATE EVENT TRIGGER { #sql-createeventtrigger }
+<a id="sql-createeventtrigger"></a>
+
+# CREATE EVENT TRIGGER
 
 define a new event trigger
 
@@ -40,18 +42,18 @@ CREATE EVENT TRIGGER NAME
 
 
      In the syntax of `CREATE EVENT TRIGGER`, the keywords `FUNCTION` and `PROCEDURE` are equivalent, but the referenced function must in any case be a function, not a procedure. The use of the keyword `PROCEDURE` here is historical and deprecated.
+ <a id="sql-createeventtrigger-notes"></a>
 
-
-## Notes { #sql-createeventtrigger-notes }
+## Notes
 
 
  Only superusers can create event triggers.
 
 
  Event triggers are disabled in single-user mode (see [app-postgres](../postgresql-server-applications/postgres.md#app-postgres)). If an erroneous event trigger disables the database so much that you can't even drop the trigger, restart in single-user mode and you'll be able to do that.
+ <a id="sql-createeventtrigger-examples"></a>
 
-
-## Examples { #sql-createeventtrigger-examples }
+## Examples
 
 
  Forbid the execution of any [DDL](../../the-sql-language/data-definition/index.md#ddl) command:
@@ -70,9 +72,9 @@ $$;
 CREATE EVENT TRIGGER abort_ddl ON ddl_command_start
    EXECUTE FUNCTION abort_any_command();
 ```
+ <a id="sql-createeventtrigger-compatibility"></a>
 
-
-## Compatibility { #sql-createeventtrigger-compatibility }
+## Compatibility
 
 
  There is no `CREATE EVENT TRIGGER` statement in the SQL standard.

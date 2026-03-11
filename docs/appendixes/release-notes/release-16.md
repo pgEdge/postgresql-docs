@@ -1,13 +1,15 @@
-## Release 16 { #release-16 }
+<a id="release-16"></a>
+
+## Release 16
 
 
 **Release date:.**
 
 
 2023-09-14
+  <a id="release-16-highlights"></a>
 
-
-### Overview { #release-16-highlights }
+### Overview
 
 
  PostgreSQL 16 contains many new features and enhancements, including:
@@ -23,9 +25,9 @@
 
 
  The above items and other new features of PostgreSQL 16 are explained in more detail in the sections below.
+  <a id="release-16-migration"></a>
 
-
-### Migration to Version 16 { #release-16-migration }
+### Migration to Version 16
 
 
  A dump/restore using [app-pg-dumpall](../../reference/postgresql-client-applications/pg_dumpall.md#app-pg-dumpall) or use of [pgupgrade](../../reference/postgresql-server-applications/pg_upgrade.md#pgupgrade) or logical replication is required for those wishing to migrate data from any previous release. See [Upgrading a PostgreSQL Cluster](../../server-administration/server-setup-and-operation/upgrading-a-postgresql-cluster.md#upgrading) for general information on migrating to new major releases.
@@ -63,18 +65,18 @@
 
    Previously roles with `CREATEROLE` privileges could change many aspects of any non-superuser role. Such changes, including adding members, now require the role requesting the change to have `ADMIN OPTION` permission. For example, they can now change the `CREATEDB`, `REPLICATION`, and `BYPASSRLS` properties only if they also have those permissions.
 -  Remove symbolic links for the postmaster binary (Peter Eisentraut) [&sect;](https://postgr.es/c/37e267335)
+  <a id="release-16-changes"></a>
 
-
-### Changes { #release-16-changes }
+### Changes
 
 
  Below you will find a detailed account of the changes between PostgreSQL 16 and the previous major release.
+ <a id="release-16-server"></a>
 
+#### Server
+  <a id="release-16-optimizer"></a>
 
-#### Server { #release-16-server }
-
-
-##### Optimizer { #release-16-optimizer }
+##### Optimizer
 
 
 -  Allow incremental sorts in more cases, including `DISTINCT` (David Rowley) [&sect;](https://postgr.es/c/b59242209) [&sect;](https://postgr.es/c/3c6fc5820)
@@ -85,9 +87,9 @@
 -  Allow anti-joins to be performed with the non-nullable input as the inner relation (Richard Guo) [&sect;](https://postgr.es/c/16dc2703c)
 -  Allow parallelization of [`FULL`](../../the-sql-language/queries/table-expressions.md#queries-join) and internal right `OUTER` hash joins (Melanie Plageman, Thomas Munro) [&sect;](https://postgr.es/c/11c2d6fdf)
 -  Improve the accuracy of [`GIN`](../../internals/gin-indexes/index.md#gin) index access optimizer costs (Ronan Dunklau) [&sect;](https://postgr.es/c/cd9479af2)
+  <a id="release-16-performance"></a>
 
-
-##### General Performance { #release-16-performance }
+##### General Performance
 
 
 -  Allow more efficient addition of heap and index pages (Andres Freund) [&sect;](https://postgr.es/c/00d1e02be) [&sect;](https://postgr.es/c/26158b852)
@@ -108,9 +110,9 @@
 
    ASCII detection is particularly useful for [`COPY FROM`](../../reference/sql-commands/copy.md#sql-copy). Vector operations are also used for some C array searches.
 -  Reduce overhead of memory allocations (Andres Freund, David Rowley) [&sect;](https://postgr.es/c/c6e0fe1f2)
+  <a id="release-16-monitoring"></a>
 
-
-##### Monitoring { #release-16-monitoring }
+##### Monitoring
 
 
 -  Add system view [`pg_stat_io`](../../server-administration/monitoring-database-activity/the-cumulative-statistics-system.md#monitoring-pg-stat-io-view) view to track I/O statistics (Melanie Plageman) [&sect;](https://postgr.es/c/a9c70b46d) [&sect;](https://postgr.es/c/8aaa04b32) [&sect;](https://postgr.es/c/ac8d53dae) [&sect;](https://postgr.es/c/0ecb87e1f) [&sect;](https://postgr.es/c/093e5c57d)
@@ -142,9 +144,9 @@
    Physical WAL senders do not display a database name.
 -  Add checkpoint and `REDO LSN` information to [`log_checkpoints`](../../server-administration/server-configuration/error-reporting-and-logging.md#guc-log-checkpoints) messages (Bharath Rupireddy, Kyotaro Horiguchi) [&sect;](https://postgr.es/c/62c46eee2)
 -  Provide additional details during client certificate failures (Jacob Champion) [&sect;](https://postgr.es/c/3a0e38504)
+  <a id="release-16-privileges"></a>
 
-
-##### Privileges { #release-16-privileges }
+##### Privileges
 
 
 -  Add predefined role [`pg_create_subscription`](../../server-administration/database-roles/predefined-roles.md#predefined-roles) with permission to create subscriptions (Robert Haas) [&sect;](https://postgr.es/c/c3afe8cf5)
@@ -190,9 +192,9 @@
 -  Allow [`makeaclitem()`](../../the-sql-language/functions-and-operators/system-information-functions-and-operators.md#functions-aclitem-fn-table) to accept multiple privilege names (Robins Tharakan) [&sect;](https://postgr.es/c/b762bbde3)
 
    Previously only a single privilege name, like [`SELECT`](../../reference/sql-commands/select.md#sql-select), was accepted.
+  <a id="release-16-server-config"></a>
 
-
-##### Server Configuration { #release-16-server-config }
+##### Server Configuration
 
 
 -  Add support for Kerberos credential delegation (Stephen Frost) [&sect;](https://postgr.es/c/6633cfb21) [&sect;](https://postgr.es/c/9c0a0e2ed) [&sect;](https://postgr.es/c/f4001a553) [&sect;](https://postgr.es/c/a2eb99a01)
@@ -230,9 +232,9 @@
 
    While primarily for developers, [`wal_sync_method=open_sync`](../../server-administration/server-configuration/write-ahead-log.md#guc-wal-sync-method)/`open_datasync` has been modified to not use direct I/O with `wal_level=minimal`; this is now enabled with `debug_io_direct=wal`.
 -  Add function [`pg_split_walfile_name()`](../../the-sql-language/functions-and-operators/system-administration-functions.md#functions-admin-backup-table) to report the segment and timeline values of WAL file names (Bharath Rupireddy) [&sect;](https://postgr.es/c/cca186348) [&sect;](https://postgr.es/c/13e0d7a60)
+  <a id="release-16-pg-hba"></a>
 
-
-##### [pg_hba.conf] { #release-16-pg-hba }
+##### [pg_hba.conf]
 
 
 -  Add support for regular expression matching on database and role entries in `pg_hba.conf` (Bertrand Drouvot) [&sect;](https://postgr.es/c/8fea86830)
@@ -246,9 +248,9 @@
    These are controlled by `include`, `include_if_exists`, and `include_dir`. System views [`pg_hba_file_rules`](../../internals/system-views/pg_hba_file_rules.md#view-pg-hba-file-rules) and [`pg_ident_file_mappings`](../../internals/system-views/pg_ident_file_mappings.md#view-pg-ident-file-mappings) now display the file name.
 -  Allow `pg_hba.conf` tokens to be of unlimited length (Tom Lane) [&sect;](https://postgr.es/c/de3f0e3fe)
 -  Add rule and map numbers to the system view [`pg_hba_file_rules`](../../internals/system-views/pg_hba_file_rules.md#view-pg-hba-file-rules) (Julien Rouhaud) [&sect;](https://postgr.es/c/c591300a8)
+  <a id="release-16-localization"></a>
 
-
-##### [Localization] { #release-16-localization }
+##### [Localization]
 
 
 -  Determine the default encoding from the locale when using ICU (Jeff Davis) [&sect;](https://postgr.es/c/c45dc7ffb)
@@ -266,9 +268,9 @@
 -  Allow `Windows` to import system locales automatically (Juan José Santamaría Flecha) [&sect;](https://postgr.es/c/bf03cfd16)
 
    Previously, only ICU locales could be imported on `Windows`.
+   <a id="release-16-logical"></a>
 
-
-#### [Logical Replication] { #release-16-logical }
+#### [Logical Replication]
 
 
 -  Allow [logical decoding](../../server-programming/logical-decoding/index.md#logicaldecoding) on standbys (Bertrand Drouvot, Andres Freund, Amit Khandekar) [&sect;](https://postgr.es/c/0fdab27ad) [&sect;](https://postgr.es/c/be87200ef) [&sect;](https://postgr.es/c/26669757b)
@@ -295,9 +297,9 @@
 -  Have [`wal_retrieve_retry_interval`](../../server-administration/server-configuration/replication.md#guc-wal-retrieve-retry-interval) operate on a per-subscription basis (Nathan Bossart) [&sect;](https://postgr.es/c/5a3a95385)
 
    Previously the retry time was applied globally. This also adds wait events [>`LogicalRepLauncherDSA`](../../server-administration/monitoring-database-activity/the-cumulative-statistics-system.md#wait-event-lwlock-table) and `LogicalRepLauncherHash`.
+  <a id="release-16-utility"></a>
 
-
-#### Utility Commands { #release-16-utility }
+#### Utility Commands
 
 
 -  Add [`EXPLAIN`](../../reference/sql-commands/explain.md#sql-explain) option `GENERIC_PLAN` to display the generic plan for a parameterized query (Laurenz Albe) [&sect;](https://postgr.es/c/3c05284d8)
@@ -319,9 +321,9 @@
 
    Previously the database name had to be specified.
 -  Allow [`CREATE STATISTICS`](../../reference/sql-commands/create-statistics.md#sql-createstatistics) to generate a statistics name if none is specified (Simon Riggs) [&sect;](https://postgr.es/c/624aa2a13)
+  <a id="release-16-datatypes"></a>
 
-
-#### Data Types { #release-16-datatypes }
+#### Data Types
 
 
 -  Allow non-decimal [integer literals](../../the-sql-language/sql-syntax/lexical-structure.md#sql-syntax-bit-strings) (Peter Eisentraut) [&sect;](https://postgr.es/c/6fcda9aba)
@@ -337,18 +339,18 @@
 -  Prevent the specification of `epoch` and `infinity` together with other fields in datetime strings (Joseph Koshakow) [&sect;](https://postgr.es/c/bcc704b52)
 -  Remove undocumented support for date input in the form <code>Y</code><em>year</em><code>M</code><em>month</em><code>D</code><em>day</em> (Joseph Koshakow) [&sect;](https://postgr.es/c/5b3c59535)
 -  Add functions [`pg_input_is_valid()`](../../the-sql-language/functions-and-operators/system-information-functions-and-operators.md#functions-info-validity-table) and `pg_input_error_info()` to check for type conversion errors (Tom Lane) [&sect;](https://postgr.es/c/1939d2628) [&sect;](https://postgr.es/c/b8da37b3a)
+  <a id="release-16-general"></a>
 
-
-#### General Queries { #release-16-general }
+#### General Queries
 
 
 -  Allow subqueries in the `FROM` clause to omit aliases (Dean Rasheed) [&sect;](https://postgr.es/c/bcedd8f5f)
 -  Add support for enhanced numeric literals in SQL/JSON paths (Peter Eisentraut) [&sect;](https://postgr.es/c/102a5c164)
 
    For example, allow hexadecimal, octal, and binary integers and underscores between digits.
+  <a id="release-16-functions"></a>
 
-
-#### Functions { #release-16-functions }
+#### Functions
 
 
 -  Add SQL/JSON constructors (Nikita Glukhov, Teodor Sigaev, Oleg Bartunov, Alexander Korotkov, Amit Langote) [&sect;](https://postgr.es/c/7081ac46a)
@@ -380,17 +382,17 @@
 -  Allow [`pg_read_file()`](../../the-sql-language/functions-and-operators/system-administration-functions.md#functions-admin-genfile-table) and `pg_read_binary_file()` to ignore missing files (Kyotaro Horiguchi) [&sect;](https://postgr.es/c/283129e32)
 -  Add byte specification (`B`) to [`pg_size_bytes()`](../../the-sql-language/functions-and-operators/system-administration-functions.md#functions-admin-dbsize) (Peter Eisentraut) [&sect;](https://postgr.es/c/ce1215d9b)
 -  Allow [`to_reg`](../../the-sql-language/functions-and-operators/system-information-functions-and-operators.md#functions-info-catalog-table)* functions to accept numeric OIDs as input (Tom Lane) [&sect;](https://postgr.es/c/3ea7329c9)
+  <a id="release-16-plpgsql"></a>
 
-
-#### [PL/pgSQL] { #release-16-plpgsql }
+#### [PL/pgSQL]
 
 
 -  Add the ability to get the current function's OID in PL/pgSQL (Pavel Stehule) [&sect;](https://postgr.es/c/d3d53f955)
 
    This is accomplished with [`GET DIAGNOSTICS variable = PG_ROUTINE_OID`](../../server-programming/pl-pgsql-sql-procedural-language/basic-statements.md#plpgsql-statements-diagnostics).
+  <a id="release-16-libpq"></a>
 
-
-#### [libpq] { #release-16-libpq }
+#### [libpq]
 
 
 -  Add libpq connection option [`require_auth`](../../client-interfaces/libpq-c-library/database-connection-control-functions.md#libpq-connect-require-auth) to specify a list of acceptable authentication methods (Jacob Champion) [&sect;](https://postgr.es/c/3a465cc67)
@@ -405,17 +407,17 @@
 -  Allow libpq to use the system certificate pool for certificate verification (Jacob Champion, Thomas Habets) [&sect;](https://postgr.es/c/8eda73146)
 
    This is enabled with [`sslrootcert=system`](../../client-interfaces/libpq-c-library/database-connection-control-functions.md#libpq-connect-sslrootcert), which also enables [`sslmode=verify-full`](../../client-interfaces/libpq-c-library/database-connection-control-functions.md#libpq-connect-sslmode).
+  <a id="release-16-client-apps"></a>
 
-
-#### Client Applications { #release-16-client-apps }
+#### Client Applications
 
 
 -  Allow [`ECPG`](../../client-interfaces/ecpg-embedded-sql-in-c/index.md#ecpg) variable declarations to use typedef names that match unreserved SQL keywords (Tom Lane) [&sect;](https://postgr.es/c/83f1c7b74)
 
    This change does prevent keywords which match C typedef names from being processed as keywords in later `EXEC SQL` blocks.
+ <a id="release-16-psql"></a>
 
-
-##### [app-psql] { #release-16-psql }
+##### [app-psql]
 
 
 -  Allow psql to control the maximum width of header lines in expanded format (Platon Pronko) [&sect;](https://postgr.es/c/a45388d6e)
@@ -442,9 +444,9 @@
 
    The new psql control variables are [`SHELL_ERROR`](../../reference/postgresql-client-applications/psql.md#app-psql-variables-shell-error) and [`SHELL_EXIT_CODE`](../../reference/postgresql-client-applications/psql.md#app-psql-variables-shell-exit-code).
 -  Various psql tab completion improvements (Vignesh C, Aleksander Alekseev, Dagfinn Ilmari Mannsåker, Shi Yu, Michael Paquier, Ken Kato, Peter Smith) [&sect;](https://postgr.es/c/f6c750d31) [&sect;](https://postgr.es/c/4cbe57974) [&sect;](https://postgr.es/c/6afcab6ac) [&sect;](https://postgr.es/c/9aa58d48f) [&sect;](https://postgr.es/c/3cf2f7af7) [&sect;](https://postgr.es/c/2ea5de296) [&sect;](https://postgr.es/c/07f7237c2) [&sect;](https://postgr.es/c/9d0cf5749) [&sect;](https://postgr.es/c/a3bc631ea) [&sect;](https://postgr.es/c/2ff5ca86e) [&sect;](https://postgr.es/c/9e1e9d656) [&sect;](https://postgr.es/c/96c498d2f)
+  <a id="release-16-pgdump"></a>
 
-
-##### [pg_dump] { #release-16-pgdump }
+##### [pg_dump]
 
 
 -  Add pg_dump control of dumping child tables and partitions (Gilles Darold) [&sect;](https://postgr.es/c/a563c24c9)
@@ -455,9 +457,9 @@
 -  Improve pg_dump to accept a more consistent compression syntax (Georgios Kokolatos) [&sect;](https://postgr.es/c/5e73a6048)
 
    Options like `--compress=gzip:5`.
+   <a id="release-16-server-apps"></a>
 
-
-#### Server Applications { #release-16-server-apps }
+#### Server Applications
 
 
 -  Add [initdb](../../reference/postgresql-server-applications/initdb.md#app-initdb) option to set server variables for the duration of initdb and all future server starts (Tom Lane) [&sect;](https://postgr.es/c/3e51b278d)
@@ -492,9 +494,9 @@
 -  Have [pg_receivewal](../../reference/postgresql-client-applications/pg_receivewal.md#app-pgreceivewal) and [pg_recvlogical](../../reference/postgresql-client-applications/pg_recvlogical.md#app-pgrecvlogical) cleanly exit on `SIGTERM` (Christoph Berg) [&sect;](https://postgr.es/c/8b60db774)
 
    This signal is often used by systemd.
+  <a id="release-16-source-code"></a>
 
-
-#### Source Code { #release-16-source-code }
+#### Source Code
 
 
 -  Build ICU support by default (Jeff Davis) [&sect;](https://postgr.es/c/fcb21b3ac)
@@ -537,9 +539,9 @@
 -  Add [pg_bsd_indent](../../internals/postgresql-coding-conventions/index.md#source) source code to the main tree (Tom Lane) [&sect;](https://postgr.es/c/4e831f4ce)
 -  Improve make_ctags and make_etags (Yugo Nagata) [&sect;](https://postgr.es/c/d1e2a380c)
 -  Adjust [`pg_attribute`](../../internals/system-catalogs/pg_attribute.md#catalog-pg-attribute) columns for efficiency (Peter Eisentraut) [&sect;](https://postgr.es/c/90189eefc)
+  <a id="release-16-modules"></a>
 
-
-#### Additional Modules { #release-16-modules }
+#### Additional Modules
 
 
 -  Improve use of extension-based indexes on boolean columns (Zongliang Quan, Tom Lane) [&sect;](https://postgr.es/c/ff720a597)
@@ -573,9 +575,9 @@
 -  Allow required extensions to be marked as non-relocatable using [`no_relocate`](../../server-programming/extending-sql/packaging-related-objects-into-an-extension.md#extend-extensions-files-no-relocate) (Regina Obe) [&sect;](https://postgr.es/c/72a5b1fc8)
 
    This allows `@extschema:referenced_extension_name@` to be treated as a constant for the lifetime of the extension.
+ <a id="release-16-pgfdw"></a>
 
-
-##### [postgres_fdw] { #release-16-pgfdw }
+##### [postgres_fdw]
 
 
 -  Allow postgres_fdw to do aborts in parallel (Etsuro Fujita) [&sect;](https://postgr.es/c/983ec2300)
@@ -586,9 +588,9 @@
    The postgres_fdw option [`analyze_sampling`](../additional-supplied-modules-and-extensions/postgres_fdw-access-data-stored-in-external-postgresql-servers.md#postgres-fdw-options-cost-estimation) controls the sampling method.
 -  Restrict shipment of [`reg`](../../the-sql-language/data-types/object-identifier-types.md#datatype-oid)* type constants in postgres_fdw to those referencing built-in objects or extensions marked as shippable (Tom Lane) [&sect;](https://postgr.es/c/31e5b5029)
 -  Have postgres_fdw and [dblink](../additional-supplied-modules-and-extensions/dblink-connect-to-other-postgresql-databases.md#dblink) handle interrupts during connection establishment (Andres Freund) [&sect;](https://postgr.es/c/e4602483e)
+    <a id="release-16-acknowledgements"></a>
 
-
-### Acknowledgments { #release-16-acknowledgements }
+### Acknowledgments
 
 
  The following individuals (in alphabetical order) have contributed to this release as patch authors, committers, reviewers, testers, or reporters of issues.

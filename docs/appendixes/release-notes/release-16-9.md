@@ -1,4 +1,6 @@
-## Release 16.9 { #release-16-9 }
+<a id="release-16-9"></a>
+
+## Release 16.9
 
 
 **Release date:.**
@@ -8,9 +10,9 @@
 
 
  This release contains a variety of fixes from 16.8. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-9-migration"></a>
 
-
-### Migration to Version 16.9 { #release-16-9-migration }
+### Migration to Version 16.9
 
 
  A dump/restore is not required for those running 16.X.
@@ -23,9 +25,9 @@
 
 
  Also, if you are upgrading from a version earlier than 16.5, see [Release 16.5](release-16-5.md#release-16-5).
+  <a id="release-16-9-changes"></a>
 
-
-### Changes { #release-16-9-changes }
+### Changes
 
 
 -  Avoid one-byte buffer overread when examining invalidly-encoded strings that are claimed to be in GB18030 encoding (Noah Misch, Andres Freund) [&sect;](https://postgr.es/c/d1264948f) [&sect;](https://postgr.es/c/f3bb0b2c4)

@@ -1,4 +1,6 @@
-## Release 16.10 { #release-16-10 }
+<a id="release-16-10"></a>
+
+## Release 16.10
 
 
 **Release date:.**
@@ -8,9 +10,9 @@
 
 
  This release contains a variety of fixes from 16.9. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-10-migration"></a>
 
-
-### Migration to Version 16.10 { #release-16-10-migration }
+### Migration to Version 16.10
 
 
  A dump/restore is not required for those running 16.X.
@@ -20,9 +22,9 @@
 
 
  Also, if you are upgrading from a version earlier than 16.9, see [Release 16.9](release-16-9.md#release-16-9).
+  <a id="release-16-10-changes"></a>
 
-
-### Changes { #release-16-10-changes }
+### Changes
 
 
 -  Tighten security checks in planner estimation functions (Dean Rasheed) [&sect;](https://postgr.es/c/7e86da539)

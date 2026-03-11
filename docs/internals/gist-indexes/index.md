@@ -1,4 +1,6 @@
-# GiST Indexes { #gist }
+<a id="gist"></a>
+
+# GiST Indexes
 
 - [Introduction](introduction.md#gist-intro)
 - [Built-in Operator Classes](built-in-operator-classes.md#gist-builtin-opclasses)

@@ -1,4 +1,6 @@
-## Release 16.11 { #release-16-11 }
+<a id="release-16-11"></a>
+
+## Release 16.11
 
 
 **Release date:.**
@@ -8,18 +10,18 @@
 
 
  This release contains a variety of fixes from 16.10. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-11-migration"></a>
 
-
-### Migration to Version 16.11 { #release-16-11-migration }
+### Migration to Version 16.11
 
 
  A dump/restore is not required for those running 16.X.
 
 
  However, if you are upgrading from a version earlier than 16.10, see [Release 16.10](release-16-10.md#release-16-10).
+  <a id="release-16-11-changes"></a>
 
-
-### Changes { #release-16-11-changes }
+### Changes
 
 
 -  Check for `CREATE` privileges on the schema in `CREATE STATISTICS` (Jelte Fennema-Nio) [&sect;](https://postgr.es/c/d20abb587)

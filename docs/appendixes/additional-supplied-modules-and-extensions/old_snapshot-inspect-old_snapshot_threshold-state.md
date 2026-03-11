@@ -1,10 +1,12 @@
-## old_snapshot — inspect `old_snapshot_threshold` state { #oldsnapshot }
+<a id="oldsnapshot"></a>
+
+## old_snapshot — inspect `old_snapshot_threshold` state
 
 
  The `old_snapshot` module allows inspection of the server state that is used to implement [old_snapshot_threshold](../../server-administration/server-configuration/resource-consumption.md#guc-old-snapshot-threshold).
+ <a id="oldsnapshot-functions"></a>
 
-
-### Functions { #oldsnapshot-functions }
+### Functions
 
 
 `pg_old_snapshot_time_mapping(array_offset OUT int4, end_timestamp OUT timestamptz, newest_xmin OUT xid) returns setof record`

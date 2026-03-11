@@ -1,4 +1,6 @@
-## GIN Tips and Tricks { #gin-tips }
+<a id="gin-tips"></a>
+
+## GIN Tips and Tricks
 
 
 Create vs. insert

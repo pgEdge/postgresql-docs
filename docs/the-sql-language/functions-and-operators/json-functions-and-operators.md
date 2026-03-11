@@ -1,4 +1,6 @@
-## JSON Functions and Operators { #functions-json }
+<a id="functions-json"></a>
+
+## JSON Functions and Operators
 
 
  This section describes:
@@ -18,15 +20,14 @@
 
 
  To learn more about the SQL/JSON standard, see [SQL Technical Report](../../bibliography.md#sqltr-19075-6). For details on JSON types supported in PostgreSQL, see [JSON Types](../data-types/json-types.md#datatype-json).
+ <a id="functions-json-processing"></a>
 
-
-### Processing and Creating JSON Data { #functions-json-processing }
+### Processing and Creating JSON Data
 
 
  [`json` and `jsonb` Operators](#functions-json-op-table) shows the operators that are available for use with JSON data types (see [JSON Types](../data-types/json-types.md#datatype-json)). In addition, the usual comparison operators shown in [Comparison Operators](comparison-functions-and-operators.md#functions-comparison-op-table) are available for `jsonb`, though not for `json`. The comparison operators follow the ordering rules for B-tree operations outlined in [`jsonb` Indexing](../data-types/json-types.md#json-indexing). See also [Aggregate Functions](aggregate-functions.md#functions-aggregate) for the aggregate function `json_agg` which aggregates record values as JSON, the aggregate function `json_object_agg` which aggregates pairs of values into a JSON object, and their `jsonb` equivalents, `jsonb_agg` and `jsonb_object_agg`.
+ <a id="functions-json-op-table"></a>
 
-
-<a id="functions-json-op-table"></a>
 **Table: `json` and `jsonb` Operators**
 
 <table>
@@ -78,9 +79,8 @@
 
 
  Some further operators exist only for `jsonb`, as shown in [Additional `jsonb` Operators](#functions-jsonb-op-table). [`jsonb` Indexing](../data-types/json-types.md#json-indexing) describes how these operators can be used to effectively search indexed `jsonb` data.
+ <a id="functions-jsonb-op-table"></a>
 
-
-<a id="functions-jsonb-op-table"></a>
 **Table: Additional `jsonb` Operators**
 
 <table>
@@ -162,9 +162,8 @@
 
 
  [JSON Creation Functions](#functions-json-creation-table) shows the functions that are available for constructing `json` and `jsonb` values. Some functions in this table have a `RETURNING` clause, which specifies the data type returned. It must be one of `json`, `jsonb`, `bytea`, a character string type (`text`, `char`, or `varchar`), or a type that can be cast to `json`. By default, the `json` type is returned.
+ <a id="functions-json-creation-table"></a>
 
-
-<a id="functions-json-creation-table"></a>
 **Table: JSON Creation Functions**
 
 <table>
@@ -226,9 +225,8 @@
 
 
  [SQL/JSON Testing Functions](#functions-sqljson-misc) details SQL/JSON facilities for testing JSON.
+ <a id="functions-sqljson-misc"></a>
 
-
-<a id="functions-sqljson-misc"></a>
 **Table: SQL/JSON Testing Functions**
 
 <table>
@@ -278,9 +276,8 @@ array w/o UK? | t</code></pre></td>
 
 
  [JSON Processing Functions](#functions-json-processing-table) shows the functions that are available for processing `json` and `jsonb` values.
+ <a id="functions-json-processing-table"></a>
 
-
-<a id="functions-json-processing-table"></a>
 **Table: JSON Processing Functions**
 
 <table>
@@ -478,9 +475,9 @@ array w/o UK? | t</code></pre></td>
 </tr>
 </tbody>
 </table>
+  <a id="functions-sqljson-path"></a>
 
-
-### The SQL/JSON Path Language { #functions-sqljson-path }
+### The SQL/JSON Path Language
 
 
  SQL/JSON path expressions specify the items to be retrieved from the JSON data, similar to XPath expressions used for SQL access to XML. In PostgreSQL, path expressions are implemented as the `jsonpath` data type and can use any elements described in [jsonpath Type](../data-types/json-types.md#datatype-jsonpath).
@@ -617,9 +614,9 @@ $.track.segments[*].HR < 70
 ```
 
 -  There are minor differences in the interpretation of regular expression patterns used in `like_regex` filters, as described in [SQL/JSON Regular Expressions](#jsonpath-regular-expressions).
+ <a id="strict-and-lax-modes"></a>
 
-
-#### Strict and Lax Modes { #strict-and-lax-modes }
+#### Strict and Lax Modes
 
 
  When you query JSON data, the path expression may not match the actual JSON data structure. An attempt to access a non-existent member of an object or element of an array results in a structural error. SQL/JSON path expressions have two modes of handling structural errors:
@@ -664,14 +661,14 @@ lax $.**.HR
 strict $.**.HR
 ```
 
+  <a id="functions-sqljson-path-operators"></a>
 
-#### SQL/JSON Path Operators and Methods { #functions-sqljson-path-operators }
+#### SQL/JSON Path Operators and Methods
 
 
  [`jsonpath` Operators and Methods](#functions-sqljson-op-table) shows the operators and methods available in `jsonpath`. Note that while the unary operators and methods can be applied to multiple values resulting from a preceding path step, the binary operators (addition etc.) can only be applied to single values.
+ <a id="functions-sqljson-op-table"></a>
 
-
-<a id="functions-sqljson-op-table"></a>
 **Table: `jsonpath` Operators and Methods**
 
 <table>
@@ -785,9 +782,8 @@ strict $.**.HR
 
 
  [`jsonpath` Filter Expression Elements](#functions-sqljson-filter-ex-table) shows the available filter expression elements.
+ <a id="functions-sqljson-filter-ex-table"></a>
 
-
-<a id="functions-sqljson-filter-ex-table"></a>
 **Table: `jsonpath` Filter Expression Elements**
 
 <table>
@@ -881,9 +877,9 @@ strict $.**.HR
 </tr>
 </tbody>
 </table>
+  <a id="jsonpath-regular-expressions"></a>
 
-
-#### SQL/JSON Regular Expressions { #jsonpath-regular-expressions }
+#### SQL/JSON Regular Expressions
 
 
  SQL/JSON path expressions allow matching text to a regular expression with the `like_regex` filter. For example, the following SQL/JSON path query would case-insensitively match all strings in an array that start with an English vowel:

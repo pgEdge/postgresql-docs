@@ -1,4 +1,6 @@
-## Behavior of B-Tree Operator Classes { #btree-behavior }
+<a id="btree-behavior"></a>
+
+## Behavior of B-Tree Operator Classes
 
 
  As shown in [B-Tree Strategies](../../server-programming/extending-sql/interfacing-extensions-to-indexes.md#xindex-btree-strat-table), a btree operator class must provide five comparison operators, `<`, `<=`, `=`, `>=` and `>`. One might expect that `<>` should also be part of the operator class, but it is not, because it would almost never be useful to use a `<>` WHERE clause in an index search. (For some purposes, the planner treats `<>` as associated with a btree operator class; but it finds that operator via the `=` operator's negator link, rather than from `pg_amop`.)

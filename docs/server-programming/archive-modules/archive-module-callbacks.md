@@ -1,10 +1,12 @@
-## Archive Module Callbacks { #archive-module-callbacks }
+<a id="archive-module-callbacks"></a>
+
+## Archive Module Callbacks
 
 
  The archive callbacks define the actual archiving behavior of the module. The server will call them as required to process each individual WAL file.
+ <a id="archive-module-startup"></a>
 
-
-### Startup Callback { #archive-module-startup }
+### Startup Callback
 
 
  The `startup_cb` callback is called shortly after the module is loaded. This callback can be used to perform any additional initialization required. If the archive module has any state, it can use `state->private_data` to store it.
@@ -14,8 +16,9 @@
 typedef void (*ArchiveStartupCB) (ArchiveModuleState *state);
 ```
 
+  <a id="archive-module-check"></a>
 
-### Check Callback { #archive-module-check }
+### Check Callback
 
 
  The `check_configured_cb` callback is called to determine whether the module is fully configured and ready to accept WAL files (e.g., its configuration parameters are set to valid values). If no `check_configured_cb` is defined, the server always assumes the module is configured.
@@ -31,9 +34,9 @@ typedef bool (*ArchiveCheckConfiguredCB) (ArchiveModuleState *state);
 WARNING:  archive_mode enabled, yet archiving is not configured
 ```
  In the latter case, the server will periodically call this function, and archiving will proceed only when it returns `true`.
+  <a id="archive-module-archive"></a>
 
-
-### Archive Callback { #archive-module-archive }
+### Archive Callback
 
 
  The `archive_file_cb` callback is called to archive a single WAL file.
@@ -43,9 +46,9 @@ WARNING:  archive_mode enabled, yet archiving is not configured
 typedef bool (*ArchiveFileCB) (ArchiveModuleState *state, const char *file, const char *path);
 ```
  If `true` is returned, the server proceeds as if the file was successfully archived, which may include recycling or removing the original WAL file. If `false` is returned, the server will keep the original WAL file and retry archiving later. *file* will contain just the file name of the WAL file to archive, while *path* contains the full path of the WAL file (including the file name).
+  <a id="archive-module-shutdown"></a>
 
-
-### Shutdown Callback { #archive-module-shutdown }
+### Shutdown Callback
 
 
  The `shutdown_cb` callback is called when the archiver process exits (e.g., after an error) or the value of [archive_library](../../server-administration/server-configuration/write-ahead-log.md#guc-archive-library) changes. If no `shutdown_cb` is defined, no special action is taken in these situations. If the archive module has any state, this callback should free it to avoid leaks.

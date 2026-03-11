@@ -1,4 +1,6 @@
-# Installation from Source Code on Windows { #install-windows }
+<a id="install-windows"></a>
+
+# Installation from Source Code on Windows
 
  It is recommended that most users download the binary distribution for Windows, available as a graphical installer package from the PostgreSQL website at [https://www.postgresql.org/download/](https://www.postgresql.org/download/). Building from source is only intended for people developing PostgreSQL or extensions.
 

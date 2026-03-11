@@ -1,4 +1,6 @@
-## Building the Documentation with Meson { #docguide-build-meson }
+<a id="docguide-build-meson"></a>
+
+## Building the Documentation with Meson
 
 
  Two options are provided for building the documentation using Meson. Change to the `build` directory before running one of these commands, or add `-C build` to the command.

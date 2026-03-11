@@ -1,4 +1,6 @@
-# Monitoring Disk Usage { #diskusage }
+<a id="diskusage"></a>
+
+# Monitoring Disk Usage
 
  This chapter discusses how to monitor the disk usage of a PostgreSQL database system.
 

@@ -1,10 +1,11 @@
-## Built-in Operator Classes { #spgist-builtin-opclasses }
+<a id="spgist-builtin-opclasses"></a>
+
+## Built-in Operator Classes
 
 
  The core PostgreSQL distribution includes the SP-GiST operator classes shown in [Built-in SP-GiST Operator Classes](#spgist-builtin-opclasses-table).
+ <a id="spgist-builtin-opclasses-table"></a>
 
-
-<a id="spgist-builtin-opclasses-table"></a>
 **Table: Built-in SP-GiST Operator Classes**
 
 <table>

@@ -1,7 +1,9 @@
-## Building and Installation with Meson { #install-meson }
+<a id="install-meson"></a>
 
+## Building and Installation with Meson
+  <a id="install-short-meson"></a>
 
-### Short Version { #install-short-meson }
+### Short Version
 
 
 ```
@@ -21,11 +23,12 @@ su - postgres
 /usr/local/pgsql/bin/psql test
 ```
  The long version is the rest of this section.
+  <a id="install-procedure-meson"></a>
+
+### Installation Procedure
 
 
-### Installation Procedure { #install-procedure-meson }
-
-
+<a id="meson-configure"></a>
 1.
 
     The first step of the installation procedure is to configure the build tree for your system and choose the options you would like. To create and configure the build directory, you can start with the `meson setup` command.
@@ -58,6 +61,7 @@ meson setup build -Dssl=openssl
 meson configure -Dcassert=true
 ```
     `meson configure`'s commonly used command-line options are explained in [`meson setup` Options](#meson-options).
+<a id="meson-build"></a>
 2.
 
     By default, Meson uses the [Ninja](https://ninja-build.org/) build tool. To build PostgreSQL from source using Meson, you can simply use the `ninja` command in the build directory.
@@ -82,6 +86,7 @@ meson test
     (This won't work as root; do it as an unprivileged user.) See [Regression Tests](../regression-tests/index.md#regress) for detailed information about interpreting the test results. You can repeat this test at any later time by issuing the same command.
 
     To run pg_regress and pg_isolation_regress tests against a running postgres instance, specify `--setup running` as an argument to `meson test`.
+<a id="meson-install"></a>
 4.
 
 !!! note
@@ -111,15 +116,15 @@ ninja install
 
 
  After the installation, you can free disk space by removing the built files from the source tree with the `ninja clean` command.
+   <a id="meson-options"></a>
 
-
-### `meson setup` Options { #meson-options }
+### `meson setup` Options
 
 
  `meson setup`'s command-line options are explained below. This list is not exhaustive (use `meson configure --help` to get one that is). The options not covered here are meant for advanced use-cases, and are documented in the standard [Meson documentation](https://mesonbuild.com/Commands.html#configure). These arguments can be used with `meson setup` as well.
+ <a id="meson-options-locations"></a>
 
-
-#### Installation Locations { #meson-options-locations }
+#### Installation Locations
 
 
  These options control where `ninja install` (or `meson install`) will put the files. The `--prefix` option (example [Short Version](#install-short-meson)) is sufficient for most cases. If you have special needs, you can customize the installation subdirectories with the other options described in this section. Beware however that changing the relative locations of the different subdirectories may render the installation non-relocatable, meaning you won't be able to move it after installation. (The `man` and `doc` locations are not affected by this restriction.) For relocatable installs, you might want to use the `-Drpath=false` option described later.
@@ -162,9 +167,9 @@ ninja install
 !!! note
 
     Care has been taken to make it possible to install PostgreSQL into shared installation locations (such as `/usr/local/include`) without interfering with the namespace of the rest of the system. First, the string “`/postgresql`” is automatically appended to `datadir`, `sysconfdir`, and `docdir`, unless the fully expanded directory name already contains the string “`postgres`” or “`pgsql`”. For example, if you choose `/usr/local` as prefix, the documentation will be installed in `/usr/local/doc/postgresql`, but if the prefix is `/opt/postgres`, then it will be in `/opt/postgres/doc`. The public C header files of the client interfaces are installed into `includedir` and are namespace-clean. The internal header files and the server header files are installed into private directories under `includedir`. See the documentation of each interface for information about how to access its header files. Finally, a private subdirectory will also be created, if appropriate, under `libdir` for dynamically loadable modules.
+  <a id="meson-options-features"></a>
 
-
-#### PostgreSQL Features { #meson-options-features }
+#### PostgreSQL Features
 
 
  The options described in this section enable building of various optional PostgreSQL features. Most of these require additional software, as described in [Requirements](requirements.md#install-requirements), and will be automatically enabled if the required software is found. You can change this behavior by manually setting these features to `enabled` to require them or `disabled` to not build with them.
@@ -223,7 +228,8 @@ ninja install
 <a id="configure-with-ldap-meson"></a>
 
 `-Dldap={ auto | enabled | disabled }`
-:   Build with LDAP support for authentication and connection parameter lookup (see [LDAP Lookup of Connection Parameters](../../client-interfaces/libpq-c-library/ldap-lookup-of-connection-parameters.md#libpq-ldap) and [LDAP Authentication](../client-authentication/ldap-authentication.md#auth-ldap) for more information). On Unix, this requires the OpenLDAP package to be installed. On Windows, the default WinLDAP library is used. Defaults to auto. `meson configure` will check for the required header files and libraries to make sure that your OpenLDAP installation is sufficient before proceeding.
+:   Build with LDAP support for authentication and connection parameter lookup (see <a id="install-ldap-links-meson"></a>
+    [LDAP Lookup of Connection Parameters](../../client-interfaces/libpq-c-library/ldap-lookup-of-connection-parameters.md#libpq-ldap) and [LDAP Authentication](../client-authentication/ldap-authentication.md#auth-ldap) for more information). On Unix, this requires the OpenLDAP package to be installed. On Windows, the default WinLDAP library is used. Defaults to auto. `meson configure` will check for the required header files and libraries to make sure that your OpenLDAP installation is sufficient before proceeding.
 <a id="configure-with-pam-meson"></a>
 
 `-Dpam={ auto | enabled | disabled }`
@@ -261,9 +267,9 @@ ninja install
 
 `-Dlibxslt={ auto | enabled | disabled }`
 :   Build with libxslt, enabling the [xml2](../../appendixes/additional-supplied-modules-and-extensions/xml2-xpath-querying-and-xslt-functionality.md#xml2) module to perform XSL transformations of XML. `-Dlibxml` must be specified as well. Defaults to auto.
+  <a id="meson-options-anti-features"></a>
 
-
-#### Anti-Features { #meson-options-anti-features }
+#### Anti-Features
 
 
 <a id="configure-readline-meson"></a>
@@ -286,9 +292,9 @@ ninja install
 
 `-Datomics={ true | false }`
 :   This option is set to true by default; setting it to false will disable use of CPU atomic operations. The option does nothing on platforms that lack such operations. On platforms that do have them, disabling atomics will result in poor performance. Changing this option is only useful for debugging or making performance comparisons.
+  <a id="meson-options-build-process"></a>
 
-
-#### Build Process Details { #meson-options-build-process }
+#### Build Process Details
 
 
 <a id="configure-auto-features-meson"></a>
@@ -344,9 +350,9 @@ ninja install
     ```
     meson configure -DBISON=PATH_TO_BISON
     ```
+  <a id="meson-options-docs"></a>
 
-
-#### Documentation { #meson-options-docs }
+#### Documentation
 
 
  See [Tool Sets](../../appendixes/documentation/tool-sets.md#docguide-toolsets) for the tools needed for building the documentation.
@@ -364,9 +370,9 @@ ninja install
 
 `-Ddocs_html_style={ simple | website }`
 :   Controls which CSS stylesheet is used. The default is `simple`. If set to `website`, the HTML documentation will reference the stylesheet for [postgresql.org](https://www.postgresql.org/docs/current/).
+  <a id="meson-options-misc"></a>
 
-
-#### Miscellaneous { #meson-options-misc }
+#### Miscellaneous
 
 
 <a id="configure-pgport-meson"></a>
@@ -389,9 +395,9 @@ ninja install
 
 <code>-Dwal_blocksize=</code><em>BLOCKSIZE</em>
 :   Set the *WAL block size*, in kilobytes. This is the unit of storage and I/O within the WAL log. The default, 8 kilobytes, is suitable for most situations; but other values may be useful in special cases. The value must be a power of 2 between 1 and 64 (kilobytes).
+  <a id="meson-options-devel"></a>
 
-
-#### Developer Options { #meson-options-devel }
+#### Developer Options
 
 
  Most of the options in this section are only of interest for developing or debugging PostgreSQL. They are not recommended for production builds, except for `--debug`, which can be useful to enable detailed bug reports in the unlucky event that you encounter a bug. On platforms supporting DTrace, `-Ddtrace` may also be reasonable to use in production.

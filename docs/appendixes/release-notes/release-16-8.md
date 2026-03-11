@@ -1,4 +1,6 @@
-## Release 16.8 { #release-16-8 }
+<a id="release-16-8"></a>
+
+## Release 16.8
 
 
 **Release date:.**
@@ -8,18 +10,18 @@
 
 
  This release contains a few fixes from 16.7. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-8-migration"></a>
 
-
-### Migration to Version 16.8 { #release-16-8-migration }
+### Migration to Version 16.8
 
 
  A dump/restore is not required for those running 16.X.
 
 
  However, if you are upgrading from a version earlier than 16.5, see [Release 16.5](release-16-5.md#release-16-5).
+  <a id="release-16-8-changes"></a>
 
-
-### Changes { #release-16-8-changes }
+### Changes
 
 
 -  Improve behavior of libpq's quoting functions (Andres Freund, Tom Lane) [&sect;](https://postgr.es/c/111f4dd27) [&sect;](https://postgr.es/c/991a60a9f) [&sect;](https://postgr.es/c/644b7d686)

@@ -1,4 +1,6 @@
-## Operator Optimization Information { #xoper-optimization }
+<a id="xoper-optimization"></a>
+
+## Operator Optimization Information
 
 
  A PostgreSQL operator definition can include several optional clauses that tell the system useful things about how the operator behaves. These clauses should be provided whenever appropriate, because they can make for considerable speedups in execution of queries that use the operator. But if you provide them, you must be sure that they are right! Incorrect use of an optimization clause can result in slow queries, subtly wrong output, or other Bad Things. You can always leave out an optimization clause if you are not sure about it; the only consequence is that queries might run slower than they need to.
@@ -8,9 +10,9 @@
 
 
  It is also possible to attach a planner support function to the function that underlies an operator, providing another way of telling the system about the behavior of the operator. See [Function Optimization Information](function-optimization-information.md#xfunc-optimization) for more information.
+ <a id="xoper-commutator"></a>
 
-
-### `COMMUTATOR` { #xoper-commutator }
+### `COMMUTATOR`
 
 
  The `COMMUTATOR` clause, if provided, names an operator that is the commutator of the operator being defined. We say that operator A is the commutator of operator B if (x A y) equals (y B x) for all possible input values x, y. Notice that B is also the commutator of A. For example, operators `<` and `>` for a particular data type are usually each others' commutators, and operator `+` is usually commutative with itself. But operator `-` is usually not commutative with anything.
@@ -27,8 +29,9 @@
 -  One way is to omit the `COMMUTATOR` clause in the first operator that you define, and then provide one in the second operator's definition. Since PostgreSQL knows that commutative operators come in pairs, when it sees the second definition it will automatically go back and fill in the missing `COMMUTATOR` clause in the first definition.
 -  The other, more straightforward way is just to include `COMMUTATOR` clauses in both definitions. When PostgreSQL processes the first definition and realizes that `COMMUTATOR` refers to a nonexistent operator, the system will make a dummy entry for that operator in the system catalog. This dummy entry will have valid data only for the operator name, left and right operand types, and result type, since that's all that PostgreSQL can deduce at this point. The first operator's catalog entry will link to this dummy entry. Later, when you define the second operator, the system updates the dummy entry with the additional information from the second definition. If you try to use the dummy operator before it's been filled in, you'll just get an error message.
 
+  <a id="xoper-negator"></a>
 
-### `NEGATOR` { #xoper-negator }
+### `NEGATOR`
 
 
  The `NEGATOR` clause, if provided, names an operator that is the negator of the operator being defined. We say that operator A is the negator of operator B if both return Boolean results and (x A y) equals NOT (x B y) for all possible inputs x, y. Notice that B is also the negator of A. For example, `<` and `>=` are a negator pair for most data types. An operator can never validly be its own negator.
@@ -44,9 +47,9 @@
 
 
  Pairs of negator operators can be defined using the same methods explained above for commutator pairs.
+  <a id="xoper-restrict"></a>
 
-
-### `RESTRICT` { #xoper-restrict }
+### `RESTRICT`
 
 
  The `RESTRICT` clause, if provided, names a restriction selectivity estimation function for the operator. (Note that this is a function name, not an operator name.) `RESTRICT` clauses only make sense for binary operators that return `boolean`. The idea behind a restriction selectivity estimator is to guess what fraction of the rows in a table will satisfy a `WHERE`-clause condition of the form:
@@ -78,9 +81,9 @@ column OP constant
 
 
  There are additional selectivity estimation functions designed for geometric operators in `src/backend/utils/adt/geo_selfuncs.c`: `areasel`, `positionsel`, and `contsel`. At this writing these are just stubs, but you might want to use them (or even better, improve them) anyway.
+  <a id="xoper-join"></a>
 
-
-### `JOIN` { #xoper-join }
+### `JOIN`
 
 
  The `JOIN` clause, if provided, names a join selectivity estimation function for the operator. (Note that this is a function name, not an operator name.) `JOIN` clauses only make sense for binary operators that return `boolean`. The idea behind a join selectivity estimator is to guess what fraction of the rows in a pair of tables will satisfy a `WHERE`-clause condition of the form:
@@ -105,8 +108,9 @@ table1.column1 OP table2.column2
 - `positionjoinsel` for 2D position-based comparisons
 - `contjoinsel` for 2D containment-based comparisons
 
+  <a id="xoper-hashes"></a>
 
-### `HASHES` { #xoper-hashes }
+### `HASHES`
 
 
  The `HASHES` clause, if present, tells the system that it is permissible to use the hash join method for a join based on this operator. `HASHES` only makes sense for a binary operator that returns `boolean`, and in practice the operator must represent equality for some data type or pair of data types.
@@ -132,9 +136,9 @@ table1.column1 OP table2.column2
 !!! note
 
     If a hash-joinable operator has an underlying function that is marked strict, the function must also be complete: that is, it should return true or false, never null, for any two nonnull inputs. If this rule is not followed, hash-optimization of `IN` operations might generate wrong results. (Specifically, `IN` might return false where the correct answer according to the standard would be null; or it might yield an error complaining that it wasn't prepared for a null result.)
+  <a id="xoper-merges"></a>
 
-
-### `MERGES` { #xoper-merges }
+### `MERGES`
 
 
  The `MERGES` clause, if present, tells the system that it is permissible to use the merge-join method for a join based on this operator. `MERGES` only makes sense for a binary operator that returns `boolean`, and in practice the operator must represent equality for some data type or pair of data types.

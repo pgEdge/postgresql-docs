@@ -1,4 +1,6 @@
-## Release 16.4 { #release-16-4 }
+<a id="release-16-4"></a>
+
+## Release 16.4
 
 
 **Release date:.**
@@ -8,18 +10,18 @@
 
 
  This release contains a variety of fixes from 16.3. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-4-migration"></a>
 
-
-### Migration to Version 16.4 { #release-16-4-migration }
+### Migration to Version 16.4
 
 
  A dump/restore is not required for those running 16.X.
 
 
  However, if you are upgrading from a version earlier than 16.3, see [Release 16.3](release-16-3.md#release-16-3).
+  <a id="release-16-4-changes"></a>
 
-
-### Changes { #release-16-4-changes }
+### Changes
 
 
 -  Prevent unauthorized code execution during pg_dump (Masahiko Sawada) [&sect;](https://postgr.es/c/6aba85a4b)

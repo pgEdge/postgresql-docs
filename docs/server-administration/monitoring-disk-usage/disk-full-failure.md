@@ -1,4 +1,6 @@
-## Disk Full Failure { #disk-full }
+<a id="disk-full"></a>
+
+## Disk Full Failure
 
 
  The most important disk monitoring task of a database administrator is to make sure the disk doesn't become full. A filled data disk will not result in data corruption, but it might prevent useful activity from occurring. If the disk holding the WAL files grows full, database server panic and consequent shutdown might occur.

@@ -1,13 +1,14 @@
-## Built-in Operator Classes { #brin-builtin-opclasses }
+<a id="brin-builtin-opclasses"></a>
+
+## Built-in Operator Classes
 
 
  The core PostgreSQL distribution includes the BRIN operator classes shown in [Built-in BRIN Operator Classes](#brin-builtin-opclasses-table).
 
 
  The *minmax* operator classes store the minimum and the maximum values appearing in the indexed column within the range. The *inclusion* operator classes store a value which includes the values in the indexed column within the range. The *bloom* operator classes build a Bloom filter for all values in the range. The *minmax-multi* operator classes store multiple minimum and maximum values, representing values appearing in the indexed column within the range.
+ <a id="brin-builtin-opclasses-table"></a>
 
-
-<a id="brin-builtin-opclasses-table"></a>
 **Table: Built-in BRIN Operator Classes**
 
 <table>
@@ -938,9 +939,9 @@
 </tr>
 </tbody>
 </table>
+ <a id="brin-builtin-opclasses--parameters"></a>
 
-
-### Operator Class Parameters { #brin-builtin-opclasses--parameters }
+### Operator Class Parameters
 
 
  Some of the built-in operator classes allow specifying parameters affecting behavior of the operator class. Each operator class has its own set of allowed parameters. Only the `bloom` and `minmax-multi` operator classes allow specifying parameters:

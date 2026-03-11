@@ -1,4 +1,6 @@
-# CREATE DOMAIN { #sql-createdomain }
+<a id="sql-createdomain"></a>
+
+# CREATE DOMAIN
 
 define a new domain
 
@@ -120,13 +122,13 @@ CREATE TABLE us_snail_addy (
   postal us_postal_code NOT NULL
 );
 ```
+ <a id="sql-createdomain-compatibility"></a>
 
-
-## Compatibility { #sql-createdomain-compatibility }
+## Compatibility
 
 
  The command `CREATE DOMAIN` conforms to the SQL standard.
+ <a id="sql-createdomain-see-also"></a>
 
-
-## See Also { #sql-createdomain-see-also }
+## See Also
   [sql-alterdomain](alter-domain.md#sql-alterdomain), [sql-dropdomain](drop-domain.md#sql-dropdomain)

@@ -1,4 +1,6 @@
-## Extensibility { #spgist-extensibility }
+<a id="spgist-extensibility"></a>
+
+## Extensibility
 
 
  SP-GiST offers an interface with a high level of abstraction, requiring the access method developer to implement only methods specific to a given data type. The SP-GiST core is responsible for efficient disk mapping and searching the tree structure. It also takes care of concurrency and logging considerations.

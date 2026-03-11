@@ -1,4 +1,6 @@
-## Overview { #hash-intro }
+<a id="hash-intro"></a>
+
+## Overview
 
 
  PostgreSQL includes an implementation of persistent on-disk hash indexes, which are fully crash recoverable. Any data type can be indexed by a hash index, including data types that do not have a well-defined linear ordering. Hash indexes store only the hash value of the data being indexed, thus there are no restrictions on the size of the data column being indexed.

@@ -1,10 +1,11 @@
-## Built-in Operator Classes { #gin-builtin-opclasses }
+<a id="gin-builtin-opclasses"></a>
+
+## Built-in Operator Classes
 
 
  The core PostgreSQL distribution includes the GIN operator classes shown in [Built-in GIN Operator Classes](#gin-builtin-opclasses-table). (Some of the optional modules described in [Additional Supplied Modules and Extensions](../../appendixes/additional-supplied-modules-and-extensions/index.md#contrib) provide additional GIN operator classes.)
+ <a id="gin-builtin-opclasses-table"></a>
 
-
-<a id="gin-builtin-opclasses-table"></a>
 **Table: Built-in GIN Operator Classes**
 
 <table>

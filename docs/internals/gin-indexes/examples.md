@@ -1,4 +1,6 @@
-## Examples { #gin-examples }
+<a id="gin-examples"></a>
+
+## Examples
 
 
  The core PostgreSQL distribution includes the GIN operator classes previously shown in [Built-in GIN Operator Classes](built-in-operator-classes.md#gin-builtin-opclasses-table). The following `contrib` modules also contain GIN operator classes:

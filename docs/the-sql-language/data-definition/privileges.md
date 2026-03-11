@@ -1,4 +1,6 @@
-## Privileges { #ddl-priv }
+<a id="ddl-priv"></a>
+
+## Privileges
 
 
  When an object is created, it is assigned an owner. The owner is normally the role that executed the creation statement. For most kinds of objects, the initial state is that only the owner (or a superuser) can do anything with the object. To allow other roles to use it, *privileges* must be granted.
@@ -134,9 +136,8 @@ REVOKE ALL ON accounts FROM PUBLIC;
 
 
  [ACL Privilege Abbreviations](#privilege-abbrevs-table) shows the one-letter abbreviations that are used for these privilege types in *ACL* (Access Control List) values. You will see these letters in the output of the [app-psql](../../reference/postgresql-client-applications/psql.md#app-psql) commands listed below, or when looking at ACL columns of system catalogs.
+ <a id="privilege-abbrevs-table"></a>
 
-
-<a id="privilege-abbrevs-table"></a>
 **Table: ACL Privilege Abbreviations**
 
 | Privilege | Abbreviation | Applicable Object Types |
@@ -158,9 +159,8 @@ REVOKE ALL ON accounts FROM PUBLIC;
 
 
  [Summary of Access Privileges](#privileges-summary-table) summarizes the privileges available for each type of SQL object, using the abbreviations shown above. It also shows the psql command that can be used to examine privilege settings for each object type.
+ <a id="privileges-summary-table"></a>
 
-
-<a id="privileges-summary-table"></a>
 **Table: Summary of Access Privileges**
 
 | Object Type | All Privileges | Default `PUBLIC` Privileges | psql Command |

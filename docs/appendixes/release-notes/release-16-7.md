@@ -1,4 +1,6 @@
-## Release 16.7 { #release-16-7 }
+<a id="release-16-7"></a>
+
+## Release 16.7
 
 
 **Release date:.**
@@ -8,18 +10,18 @@
 
 
  This release contains a variety of fixes from 16.6. For information about new features in major release 16, see [Release 16](release-16.md#release-16).
+ <a id="release-16-7-migration"></a>
 
-
-### Migration to Version 16.7 { #release-16-7-migration }
+### Migration to Version 16.7
 
 
  A dump/restore is not required for those running 16.X.
 
 
  However, if you are upgrading from a version earlier than 16.5, see [Release 16.5](release-16-5.md#release-16-5).
+  <a id="release-16-7-changes"></a>
 
-
-### Changes { #release-16-7-changes }
+### Changes
 
 
 -  Harden `PQescapeString` and allied functions against invalidly-encoded input strings (Andres Freund, Noah Misch) [&sect;](https://postgr.es/c/92e4170f4) [&sect;](https://postgr.es/c/6e05b195d) [&sect;](https://postgr.es/c/56aa2dcdd) [&sect;](https://postgr.es/c/01784793f) [&sect;](https://postgr.es/c/41343f840) [&sect;](https://postgr.es/c/0075a5c6c)

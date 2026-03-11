@@ -1,4 +1,6 @@
-# The SQL Language { #sql }
+<a id="sql"></a>
+
+# The SQL Language
 
 
  This part describes the use of the SQL language in PostgreSQL. We start with describing the general syntax of SQL, then explain how to create the structures to hold data, how to populate the database, and how to query it. The middle part lists the available data types and functions for use in SQL commands. The rest treats several aspects that are important for tuning a database for optimal performance.
