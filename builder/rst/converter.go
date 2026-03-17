@@ -132,10 +132,14 @@ func (c *Converter) convertFile(rstName, outputPath string) error {
 
 	ctx.CurrentFile = outputPath
 
+	// Pre-scan raw text for substitution defs and hyperlink targets
+	// that may be deeply nested inside directive bodies.
+	prescanDefinitions(string(data), ctx.Substitutions, ctx.HyperlinkTargets)
+
 	// Parse
 	root := Parse(string(data))
 
-	// Collect substitution definitions from this file
+	// Also collect from parsed tree (catches top-level defs)
 	collectSubstitutions(root, ctx.Substitutions, ctx.HyperlinkTargets)
 
 	// Convert
@@ -422,18 +426,69 @@ func convertInlineCtx(ctx *ConvertContext, text string) string {
 	)
 }
 
-// collectSubstitutions extracts substitution definitions and
-// hyperlink targets from a document tree.
-func collectSubstitutions(root *Node, subs map[string]*Node, targets map[string]string) {
-	for _, child := range root.Children {
-		if child.Type == SubstitutionDefNode {
-			subs[child.SubstitutionName] = child
+// prescanDefinitions does a simple regex-based scan of raw RST text
+// to find substitution definitions and hyperlink targets that may be
+// nested anywhere (inside directive bodies, method docs, etc.).
+func prescanDefinitions(text string, subs map[string]*Node, targets map[string]string) {
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		// Substitution: .. |name| replace:: text
+		if strings.HasPrefix(trimmed, ".. |") &&
+			strings.Contains(trimmed, "| replace::") {
+			pipeEnd := strings.Index(trimmed[4:], "|")
+			if pipeEnd >= 0 {
+				name := trimmed[4 : 4+pipeEnd]
+				replIdx := strings.Index(trimmed, "replace::")
+				if replIdx >= 0 {
+					value := strings.TrimSpace(
+						trimmed[replIdx+9:])
+					if _, exists := subs[name]; !exists {
+						subs[name] = &Node{
+							Type:             SubstitutionDefNode,
+							SubstitutionName: name,
+							DirectiveName:    "replace",
+							DirectiveArg:     value,
+						}
+					}
+				}
+			}
 		}
-		if child.Type == LabelNode && child.Text != "" {
-			// Hyperlink target: .. _name: URL
-			targets[child.Label] = child.Text
+
+		// Hyperlink target: .. _name: URL
+		if strings.HasPrefix(trimmed, ".. _") &&
+			!strings.HasSuffix(trimmed, ":") {
+			rest := trimmed[4:]
+			colonIdx := strings.Index(rest, ":")
+			if colonIdx > 0 {
+				name := rest[:colonIdx]
+				url := strings.TrimSpace(rest[colonIdx+1:])
+				if url != "" {
+					if _, exists := targets[name]; !exists {
+						targets[name] = url
+					}
+				}
+			}
 		}
 	}
+}
+
+// collectSubstitutions recursively extracts substitution definitions
+// and hyperlink targets from the entire document tree.
+func collectSubstitutions(root *Node, subs map[string]*Node, targets map[string]string) {
+	var walk func(*Node)
+	walk = func(n *Node) {
+		if n.Type == SubstitutionDefNode {
+			subs[n.SubstitutionName] = n
+		}
+		if n.Type == LabelNode && n.Text != "" {
+			targets[n.Label] = n.Text
+		}
+		for _, child := range n.Children {
+			walk(child)
+		}
+	}
+	walk(root)
 }
 
 // copyImage copies an image from source to output directory.

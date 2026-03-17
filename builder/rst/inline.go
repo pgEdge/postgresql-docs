@@ -44,10 +44,10 @@ var (
 	reStandaloneRef = regexp.MustCompile(`\b([A-Za-z][A-Za-z0-9]+)_\b`)
 
 	// |substitution|_ (substitution with hyperlink)
-	reSubstitutionLink = regexp.MustCompile(`\|([a-zA-Z0-9_-]+)\|_`)
+	reSubstitutionLink = regexp.MustCompile(`\|([a-zA-Z0-9_ -]+)\|_`)
 
 	// |substitution|
-	reSubstitution = regexp.MustCompile(`\|([a-zA-Z0-9_-]+)\|`)
+	reSubstitution = regexp.MustCompile(`\|([a-zA-Z0-9_ -]+)\|`)
 
 	// RST backslash escape: \x (any character after backslash)
 	reBackslashEscape = regexp.MustCompile(`\\(.)`)
@@ -112,6 +112,13 @@ func ConvertInline(
 				display := name
 				if def, ok := substitutions[name]; ok {
 					display = def.DirectiveArg
+					// Resolve roles in the replacement text
+					display = reRole.ReplaceAllStringFunc(display,
+						func(rm string) string {
+							rs := reRole.FindStringSubmatch(rm)
+							return convertRole(rs[1], rs[2],
+								labelMap, fileMap, currentFile)
+						})
 				}
 				if url, ok := hyperlinkTargets[name]; ok {
 					return "[" + display + "](" + url + ")"
