@@ -243,19 +243,8 @@ func convertBulletList(
 ) {
 	w.BlankLine()
 	for _, item := range node.Children {
-		w.EnsureNewline()
-		// Convert item text — may contain sub-paragraphs
-		text := convertInlineCtx(ctx, item.Text)
-		lines := strings.Split(text, "\n")
-		for i, line := range lines {
-			if i == 0 {
-				w.WriteString("- " + line + "\n")
-			} else if line == "" {
-				w.WriteString("\n")
-			} else {
-				w.WriteString("  " + line + "\n")
-			}
-		}
+		w.BlankLine()
+		convertListItem(ctx, item, w, "- ", "    ")
 	}
 }
 
@@ -267,21 +256,94 @@ func convertEnumList(
 ) {
 	w.BlankLine()
 	for i, item := range node.Children {
-		w.EnsureNewline()
-		text := convertInlineCtx(ctx, item.Text)
-		lines := strings.Split(text, "\n")
+		w.BlankLine()
 		prefix := fmt.Sprintf("%d. ", i+1)
-		indent := strings.Repeat(" ", len(prefix))
-		for j, line := range lines {
-			if j == 0 {
-				w.WriteString(prefix + line + "\n")
-			} else if line == "" {
-				w.WriteString("\n")
+		// MkDocs requires 4-space indent for nested blocks
+		indent := "    "
+		if len(prefix) > 4 {
+			indent = strings.Repeat(" ", len(prefix))
+		}
+		convertListItem(ctx, item, w, prefix, indent)
+	}
+}
+
+// convertListItem renders a single list item.  If the item's raw
+// text contains embedded RST directives (e.g. code-block, image,
+// csv-table inside a bullet item) we sub-parse it so the directives
+// are properly converted instead of emitted as literal text.
+func convertListItem(
+	ctx *ConvertContext,
+	item *Node,
+	w *shared.MarkdownWriter,
+	prefix, indent string,
+) {
+	text := item.Text
+
+	// Check whether the raw text contains an embedded directive.
+	if containsDirective(text) {
+		// Sub-parse the item text as a mini-RST document.
+		subRoot := Parse(text)
+		first := true
+		for _, child := range subRoot.Children {
+			if first {
+				// First block: emit with list prefix
+				subW := shared.NewMarkdownWriter()
+				convertNode(ctx, child, subW)
+				content := strings.TrimSpace(subW.String())
+				lines := strings.Split(content, "\n")
+				for j, line := range lines {
+					if j == 0 {
+						w.WriteString(prefix + line + "\n")
+					} else if line == "" {
+						w.WriteString("\n")
+					} else {
+						w.WriteString(indent + line + "\n")
+					}
+				}
+				first = false
 			} else {
-				w.WriteString(indent + line + "\n")
+				// Subsequent blocks: indent under the list item
+				subW := shared.NewMarkdownWriter()
+				convertNode(ctx, child, subW)
+				content := strings.TrimSpace(subW.String())
+				w.WriteString("\n")
+				for _, line := range strings.Split(content, "\n") {
+					if line == "" {
+						w.WriteString("\n")
+					} else {
+						w.WriteString(indent + line + "\n")
+					}
+				}
 			}
 		}
+		return
 	}
+
+	// Simple case: no embedded directives — inline conversion only.
+	converted := convertInlineCtx(ctx, text)
+	lines := strings.Split(converted, "\n")
+	for i, line := range lines {
+		if i == 0 {
+			w.WriteString(prefix + line + "\n")
+		} else if line == "" {
+			w.WriteString("\n")
+		} else {
+			w.WriteString(indent + line + "\n")
+		}
+	}
+}
+
+// containsDirective checks whether text contains an RST directive
+// pattern (.. name::) on its own line.
+func containsDirective(text string) bool {
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, ".. ") &&
+			strings.Contains(trimmed[3:], "::") {
+			return true
+		}
+	}
+	return false
 }
 
 // convertBlockQuote writes a blockquote.

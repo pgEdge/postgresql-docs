@@ -310,8 +310,7 @@ func (p *Parser) parseDirective(parent *Node, baseIndent int) {
 			break
 		}
 		trimmedLn := strings.TrimSpace(ln)
-		if strings.HasPrefix(trimmedLn, ":") &&
-			strings.Contains(trimmedLn[1:], ":") {
+		if isDirectiveOption(trimmedLn) {
 			colonEnd := strings.Index(trimmedLn[1:], ":") + 1
 			optName := trimmedLn[1:colonEnd]
 			optVal := strings.TrimSpace(trimmedLn[colonEnd+1:])
@@ -373,6 +372,35 @@ func (p *Parser) parseDirective(parent *Node, baseIndent int) {
 	}
 
 	parent.Children = append(parent.Children, node)
+}
+
+// isDirectiveOption checks whether a line is an RST directive option
+// of the form ":name: value" where name contains only letters,
+// digits, hyphens, and underscores.  This avoids misidentifying
+// inline roles like ":ref:`target`" as options.
+func isDirectiveOption(trimmed string) bool {
+	if len(trimmed) < 3 || trimmed[0] != ':' {
+		return false
+	}
+	// Find the closing colon
+	colonEnd := strings.Index(trimmed[1:], ":")
+	if colonEnd < 1 {
+		return false
+	}
+	optName := trimmed[1 : colonEnd+1]
+	// Option names: letters, digits, hyphens, underscores only
+	for _, r := range optName {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
+			(r >= '0' && r <= '9') || r == '-' || r == '_') {
+			return false
+		}
+	}
+	// After the closing colon must be space or end-of-line
+	afterColon := colonEnd + 2
+	if afterColon < len(trimmed) && trimmed[afterColon] != ' ' {
+		return false
+	}
+	return true
 }
 
 // isAdmonitionDirective returns true for admonition-type directives.
@@ -777,15 +805,17 @@ func (p *Parser) parseGridTable(parent *Node) {
 	// Find column boundaries from the first separator line
 	colBounds := findColumnBounds(allLines[0])
 
-	// Group data rows and detect header separator
+	// Group data rows and detect header separator.
+	// A full separator starts with + and has + at every column
+	// boundary.  A partial separator starts with | in some
+	// columns and +---+ in others (row-span / merged cells).
 	hasHeader := false
-	var dataGroups [][]string
+	var dataGroups [][]string // each group becomes one logical row
 	var currentGroup []string
 
 	for _, line := range allLines {
 		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "+") {
-			// Separator line
+		if isFullSeparator(trimmed, colBounds) {
 			if strings.Contains(trimmed, "=") {
 				hasHeader = true
 			}
@@ -793,7 +823,9 @@ func (p *Parser) parseGridTable(parent *Node) {
 				dataGroups = append(dataGroups, currentGroup)
 				currentGroup = nil
 			}
-		} else if strings.HasPrefix(trimmed, "|") {
+		} else {
+			// Data line or partial separator — both go into the
+			// current group and are handled during extraction.
 			currentGroup = append(currentGroup, line)
 		}
 	}
@@ -801,10 +833,11 @@ func (p *Parser) parseGridTable(parent *Node) {
 		dataGroups = append(dataGroups, currentGroup)
 	}
 
-	// Extract cell contents
+	// Extract cell contents.  Groups that contain partial
+	// separators (merged-cell tables) are split into sub-rows.
 	for _, group := range dataGroups {
-		row := extractRowCells(group, colBounds)
-		node.TableRows = append(node.TableRows, row)
+		rows := extractGroupRows(group, colBounds)
+		node.TableRows = append(node.TableRows, rows...)
 	}
 	node.TableHeader = hasHeader
 
@@ -823,15 +856,128 @@ func findColumnBounds(sep string) []int {
 	return bounds
 }
 
+// isFullSeparator checks if a line is a full-width row separator
+// (starts with + and has + at every column boundary).
+func isFullSeparator(trimmed string, colBounds []int) bool {
+	if len(trimmed) == 0 || trimmed[0] != '+' {
+		return false
+	}
+	// Must have + or = at every column boundary position
+	for _, pos := range colBounds {
+		if pos >= len(trimmed) {
+			return false
+		}
+		if trimmed[pos] != '+' {
+			return false
+		}
+	}
+	return true
+}
+
+// isPartialSeparator checks if a line contains partial row
+// separators (some columns have +---+ while others continue
+// with |).
+func isPartialSeparator(line string, colBounds []int) bool {
+	if len(colBounds) < 2 {
+		return false
+	}
+	hasSep := false
+	hasData := false
+	for i := 0; i < len(colBounds)-1; i++ {
+		pos := colBounds[i]
+		if pos >= len(line) {
+			continue
+		}
+		ch := line[pos]
+		if ch == '+' {
+			hasSep = true
+		} else if ch == '|' {
+			hasData = true
+		}
+	}
+	return hasSep && hasData
+}
+
+// extractGroupRows handles a data group (lines between full
+// separators).  If the group contains partial separators
+// (merged cells), it splits into multiple rows.
+func extractGroupRows(
+	group []string,
+	colBounds []int,
+) [][]string {
+	// Check for partial separators
+	hasPartial := false
+	for _, line := range group {
+		if isPartialSeparator(line, colBounds) {
+			hasPartial = true
+			break
+		}
+	}
+
+	if !hasPartial {
+		// Simple case: one row, no merges
+		return [][]string{extractRowCells(group, colBounds)}
+	}
+
+	// Complex case: split into sub-rows at partial separators.
+	// Each sub-row gets its own cells; columns that span across
+	// partial separators get empty strings in subsequent rows.
+	numCols := len(colBounds) - 1
+	var rows [][]string
+	var currentLines []string
+
+	flush := func() {
+		if len(currentLines) == 0 {
+			return
+		}
+		row := extractRowCells(currentLines, colBounds)
+		rows = append(rows, row)
+		currentLines = nil
+	}
+
+	for _, line := range group {
+		if isPartialSeparator(line, colBounds) {
+			flush()
+			// After a partial separator, columns that had the
+			// separator start fresh; spanning columns continue.
+			// We'll handle continuation in a post-pass.
+		} else {
+			currentLines = append(currentLines, line)
+		}
+	}
+	flush()
+
+	// Post-pass: propagate spanning cell content.  If a column
+	// has empty text but the first row had content AND the
+	// partial separator didn't cut that column, carry the value
+	// down.  However, for simpler handling we just leave them
+	// as separate rows — the HTML renderer handles it fine.
+	// Fill empty first-column cells with empty string to keep
+	// column count consistent.
+	for i := range rows {
+		for len(rows[i]) < numCols {
+			rows[i] = append(rows[i], "")
+		}
+	}
+
+	return rows
+}
+
 // extractRowCells extracts cell text from data lines using column
-// bounds. Multi-line cells are joined with newlines.
+// bounds.  Continuation lines within a paragraph are joined with
+// spaces; blank lines and bullet-list items start new lines so
+// that the cell structure is preserved for Markdown rendering.
 func extractRowCells(dataLines []string, colBounds []int) []string {
 	numCols := len(colBounds) - 1
 	if numCols <= 0 {
 		return nil
 	}
 
-	cells := make([]string, numCols)
+	// Collect the raw per-line text for each column first.
+	rawLines := make([][]string, numCols)
+	for i := range rawLines {
+		rawLines[i] = []string{}
+	}
 	for _, line := range dataLines {
 		for i := 0; i < numCols; i++ {
 			start := colBounds[i] + 1
@@ -839,21 +985,56 @@ func extractRowCells(dataLines []string, colBounds []int) []string {
 			if end > len(line) {
 				end = len(line)
 			}
-			if start >= len(line) {
-				continue
-			}
 			cellText := ""
-			if end > start {
-				cellText = strings.TrimSpace(line[start:end])
+			if start < len(line) && end > start {
+				cellText = strings.TrimRight(line[start:end], " ")
 			}
-			if cells[i] != "" && cellText != "" {
-				cells[i] += " " + cellText
-			} else if cellText != "" {
-				cells[i] = cellText
+			rawLines[i] = append(rawLines[i], cellText)
+		}
+	}
+
+	// Now collapse each column's lines intelligently.
+	cells := make([]string, numCols)
+	for i := 0; i < numCols; i++ {
+		cells[i] = collapseCell(rawLines[i])
+	}
+	return cells
+}
+
+// collapseCell joins the raw lines of a single grid-table cell.
+// Blank lines produce paragraph breaks, lines starting with a
+// bullet marker (* or -) start new lines, and ordinary
+// continuation lines are joined with a space.
+func collapseCell(lines []string) string {
+	var result strings.Builder
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			// Blank line — paragraph separator
+			if result.Len() > 0 {
+				result.WriteString("\n\n")
+			}
+			continue
+		}
+		isBullet := len(trimmed) >= 2 &&
+			(trimmed[0] == '*' || trimmed[0] == '-' ||
+				trimmed[0] == '+') && trimmed[1] == ' '
+		if result.Len() == 0 {
+			result.WriteString(trimmed)
+		} else if isBullet {
+			// Bullet items always start on a new line
+			result.WriteString("\n" + trimmed)
+		} else {
+			// Check if previous content ended with a newline
+			s := result.String()
+			if strings.HasSuffix(s, "\n") {
+				result.WriteString(trimmed)
+			} else {
+				result.WriteString(" " + trimmed)
 			}
 		}
 	}
-	return cells
+	return strings.TrimSpace(result.String())
 }
 
 // parseParagraph parses a paragraph of text.

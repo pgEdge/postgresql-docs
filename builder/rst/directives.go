@@ -71,14 +71,17 @@ func handleImage(
 	node *Node,
 	w *shared.MarkdownWriter,
 ) error {
-	imgPath := node.DirectiveArg
+	imgPath := strings.TrimPrefix(node.DirectiveArg, "/")
 	alt := node.Options["alt"]
 	if alt == "" {
 		alt = "image"
 	}
 
+	// Compute relative path from current output file to the image
+	relImg := relativeImagePath(ctx.CurrentFile, imgPath)
+
 	w.BlankLine()
-	w.WriteString(fmt.Sprintf("![%s](%s)\n", alt, imgPath))
+	w.WriteString(fmt.Sprintf("![%s](%s)\n", alt, relImg))
 
 	// Copy image file
 	ctx.copyImage(imgPath)
@@ -92,14 +95,16 @@ func handleFigure(
 	node *Node,
 	w *shared.MarkdownWriter,
 ) error {
-	imgPath := node.DirectiveArg
+	imgPath := strings.TrimPrefix(node.DirectiveArg, "/")
 	alt := node.Options["alt"]
 	if alt == "" {
 		alt = "image"
 	}
 
+	relImg := relativeImagePath(ctx.CurrentFile, imgPath)
+
 	w.BlankLine()
-	w.WriteString(fmt.Sprintf("![%s](%s)\n", alt, imgPath))
+	w.WriteString(fmt.Sprintf("![%s](%s)\n", alt, relImg))
 	ctx.copyImage(imgPath)
 
 	// Caption is in the body
@@ -131,17 +136,37 @@ func handleAdmonition(
 	w *shared.MarkdownWriter,
 ) error {
 	kind := node.DirectiveName
-	title := node.DirectiveArg
 
 	w.BlankLine()
-	if title != "" {
-		w.WriteString(fmt.Sprintf("!!! %s \"%s\"\n\n", kind, title))
+
+	// Only the generic "admonition" directive uses the arg as a
+	// title.  For note/warning/tip etc. the arg is the first line
+	// of the body text, not a title.
+	if kind == "admonition" && node.DirectiveArg != "" {
+		w.WriteString(fmt.Sprintf("!!! %s \"%s\"\n\n",
+			kind, node.DirectiveArg))
 	} else {
 		w.WriteString(fmt.Sprintf("!!! %s\n\n", kind))
 	}
 
+	// Build body: for non-"admonition" directives, prepend the arg
+	// (first line of text) to the body.
+	bodyPrefix := ""
+	if kind != "admonition" && node.DirectiveArg != "" {
+		bodyPrefix = node.DirectiveArg
+	}
+
 	// Convert children (parsed body) with 4-space indent
 	content := convertAdmonitionBody(ctx, node)
+
+	if bodyPrefix != "" {
+		prefix := convertInlineCtx(ctx, bodyPrefix)
+		if content != "" {
+			content = prefix + " " + content
+		} else {
+			content = prefix
+		}
+	}
 
 	for _, line := range strings.Split(content, "\n") {
 		if line == "" {
@@ -537,4 +562,19 @@ func handleOnly(
 		}
 	}
 	return nil
+}
+
+// relativeImagePath computes the relative path from the current
+// output .md file to an image (whose path is relative to the
+// docs root, e.g. "images/foo.png").
+func relativeImagePath(currentFile, imgPath string) string {
+	dir := filepath.Dir(currentFile)
+	if dir == "." || dir == "" {
+		return imgPath
+	}
+	rel, err := filepath.Rel(dir, imgPath)
+	if err != nil {
+		return imgPath
+	}
+	return rel
 }

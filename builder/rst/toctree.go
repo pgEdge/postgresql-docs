@@ -48,9 +48,9 @@ func ResolveToctree(
 	labelMap = make(map[string]labelInfo)
 	order := 0
 
-	var walk func(rstName, parentPath string) *ToctreeEntry
+	var walk func(rstName, parentPath string, isTopLevel bool) *ToctreeEntry
 
-	walk = func(rstName, parentPath string) *ToctreeEntry {
+	walk = func(rstName, parentPath string, isTopLevel bool) *ToctreeEntry {
 		rstPath := filepath.Join(srcDir, rstName+".rst")
 		data, err := os.ReadFile(rstPath)
 		if err != nil {
@@ -63,6 +63,10 @@ func ResolveToctree(
 
 		// Extract title
 		title := extractDocTitle(root)
+		slug := shared.Slugify(title)
+		if slug == "" {
+			slug = rstName
+		}
 
 		// Determine output path
 		var outputPath string
@@ -102,13 +106,19 @@ func ResolveToctree(
 			}
 		}
 
-		// Find toctree directives
+		// Find toctree directives and walk children.
+		// Children of this file go into a subdirectory named
+		// after this file's slug, creating the nav hierarchy.
 		toctreeEntries := collectToctreeEntries(root)
+		childPath := parentPath
+		if len(toctreeEntries) > 0 && !isTopLevel {
+			childPath = filepath.Join(parentPath, slug)
+		}
 		for _, childName := range toctreeEntries {
 			if _, seen := fileMap[childName]; seen {
 				continue
 			}
-			childEntry := walk(childName, parentPath)
+			childEntry := walk(childName, childPath, false)
 			if childEntry != nil {
 				entry.Children = append(entry.Children, childEntry)
 			}
@@ -118,7 +128,9 @@ func ResolveToctree(
 		return entry
 	}
 
-	walk("index", "")
+	// index.rst is the top level — its direct toctree children
+	// are the main sections; they each get their own subdirectory.
+	walk("index", "", true)
 	return
 }
 
