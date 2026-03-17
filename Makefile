@@ -1,10 +1,12 @@
 BINARY = bin/pgdoc-converter
-SRC_DIR ?= ""
+SRC_DIR ?= /doc-source
 OUT_DIR ?= ./docs
 MKDOCS ?= ./mkdocs.yml
 VERSION ?= ""
+COPYRIGHT ?= ""
+PGADMIN_SRC ?= ""
 
-.PHONY: build test lint clean convert validate setup
+.PHONY: build test lint clean convert convert-rst validate setup
 
 setup:
 	@git config core.hooksPath .githooks
@@ -24,6 +26,12 @@ clean: setup
 convert: build
 	./$(BINARY) -src $(SRC_DIR) -out $(OUT_DIR) \
 		-mkdocs $(MKDOCS) -version $(VERSION) -verbose
+
+convert-rst: build
+	./$(BINARY) -mode rst -src $(SRC_DIR) -out $(OUT_DIR) \
+		-mkdocs $(MKDOCS) -version $(VERSION) \
+		-copyright $(COPYRIGHT) \
+		-pgadmin-src $(PGADMIN_SRC) -verbose
 
 validate: build
 	./$(BINARY) -src $(SRC_DIR) -out $(OUT_DIR) \

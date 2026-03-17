@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pgEdge/postgresql-docs/builder/convert"
+	"github.com/pgEdge/postgresql-docs/builder/shared"
 )
 
 // NavEntry represents a single entry in the mkdocs nav tree.
@@ -28,7 +28,7 @@ type NavEntry struct {
 }
 
 // BuildNav constructs a nav tree from the converter's file list.
-func BuildNav(files []*convert.FileEntry) *NavEntry {
+func BuildNav(files []*shared.FileEntry) *NavEntry {
 	root := &NavEntry{Title: "root"}
 
 	for _, f := range files {
@@ -193,7 +193,7 @@ func yamlQuote(s string) string {
 
 // slugMatch checks if a title matches a directory slug.
 func slugMatch(title, slug string) bool {
-	return convert.ExportSlugify(title) == slug
+	return shared.Slugify(title) == slug
 }
 
 // deslugify converts a slug back to a readable title.

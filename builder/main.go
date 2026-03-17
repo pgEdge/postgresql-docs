@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------
 
 // pgdoc-converter converts PostgreSQL DocBook SGML documentation
-// to Markdown for MkDocs Material.
+// or pgAdmin RST documentation to Markdown for MkDocs Material.
 package main
 
 import (
@@ -18,21 +18,25 @@ import (
 
 	"github.com/pgEdge/postgresql-docs/builder/convert"
 	"github.com/pgEdge/postgresql-docs/builder/nav"
+	"github.com/pgEdge/postgresql-docs/builder/rst"
 	"github.com/pgEdge/postgresql-docs/builder/sgml"
 	"github.com/pgEdge/postgresql-docs/builder/validate"
 )
 
 func main() {
-	srcDir := flag.String("src", "", "Path to PostgreSQL doc/src/sgml/ directory")
+	mode := flag.String("mode", "sgml", "Conversion mode: sgml or rst")
+	srcDir := flag.String("src", "", "Path to source documentation directory")
 	outDir := flag.String("out", "./docs", "Output directory for .md files")
 	mkdocsFile := flag.String("mkdocs", "./mkdocs.yml", "Path to mkdocs.yml")
-	version := flag.String("version", "", "PostgreSQL version label (e.g., 17.2)")
+	version := flag.String("version", "", "Version label (e.g., 17.2 or 9.13)")
+	copyright := flag.String("copyright", "", "Copyright string (RST mode)")
+	pgadminSrc := flag.String("pgadmin-src", "", "Path to pgAdmin source (for literalinclude)")
 	doValidate := flag.Bool("validate", false, "Run link validation after conversion")
 	verbose := flag.Bool("verbose", false, "Verbose output")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: pgdoc-converter [flags]\n\n")
-		fmt.Fprintf(os.Stderr, "Converts PostgreSQL DocBook SGML docs to Markdown.\n\n")
+		fmt.Fprintf(os.Stderr, "Converts PostgreSQL SGML or pgAdmin RST docs to Markdown.\n\n")
 		flag.PrintDefaults()
 	}
 
@@ -51,36 +55,51 @@ func main() {
 	}
 
 	if *verbose {
+		fmt.Printf("Mode: %s\n", *mode)
 		fmt.Printf("Source: %s\n", *srcDir)
 		fmt.Printf("Output: %s\n", *outDir)
 		fmt.Printf("Version: %s\n", *version)
 	}
 
-	// Phase 0: Generate missing SGML files (version.sgml, errcodes, etc.)
-	if *verbose {
+	switch *mode {
+	case "sgml":
+		runSGML(*srcDir, *outDir, *mkdocsFile, *version, *doValidate, *verbose)
+	case "rst":
+		runRST(*srcDir, *outDir, *mkdocsFile, *version, *copyright,
+			*pgadminSrc, *doValidate, *verbose)
+	default:
+		fmt.Fprintf(os.Stderr, "error: unknown mode %q (use sgml or rst)\n", *mode)
+		os.Exit(1)
+	}
+}
+
+// runSGML runs the SGML conversion pipeline.
+func runSGML(srcDir, outDir, mkdocsFile, version string, doValidate, verbose bool) {
+	// Phase 0: Generate missing SGML files
+	if verbose {
 		fmt.Println("Phase 0: Generating missing SGML files...")
 	}
-	genCount, genWarnings := sgml.GenerateMissingFiles(*srcDir, *version)
-	if *verbose {
+	genCount, genWarnings := sgml.GenerateMissingFiles(srcDir, version)
+	if verbose {
 		fmt.Printf("  Generated %d files\n", genCount)
 		for _, w := range genWarnings {
 			fmt.Printf("  Warning: %s\n", w)
 		}
 	}
-	defer sgml.CleanGeneratedFiles(*srcDir)
+	defer sgml.CleanGeneratedFiles(srcDir)
 
 	// Phase 1: Entity resolution
-	if *verbose {
+	if verbose {
 		fmt.Println("Phase 1: Resolving entities...")
 	}
-	resolver := sgml.NewEntityResolver(*srcDir)
+	resolver := sgml.NewEntityResolver(srcDir)
 	body, err := resolver.ResolveFile("postgres.sgml")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error resolving entities: %v\n", err)
 		os.Exit(1)
 	}
 
-	if *verbose {
+	if verbose {
 		fmt.Printf("  Resolved %d entities\n", resolver.EntityCount())
 		fmt.Printf("  Document body: %d bytes\n", len(body))
 		for _, w := range resolver.Warnings() {
@@ -89,7 +108,7 @@ func main() {
 	}
 
 	// Phase 2: Parse SGML
-	if *verbose {
+	if verbose {
 		fmt.Println("Phase 2: Parsing SGML...")
 	}
 	root, warnings, err := sgml.ParseString(body)
@@ -97,7 +116,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error parsing SGML: %v\n", err)
 		os.Exit(1)
 	}
-	if *verbose && len(warnings) > 0 {
+	if verbose && len(warnings) > 0 {
 		fmt.Printf("  Parser warnings: %d\n", len(warnings))
 		for _, w := range warnings {
 			fmt.Printf("    %s\n", w)
@@ -105,18 +124,18 @@ func main() {
 	}
 
 	// Phases 3-4: Convert
-	if *verbose {
+	if verbose {
 		fmt.Println("Phase 3: Building ID map...")
 		fmt.Println("Phase 4: Converting to Markdown...")
 	}
-	converter := convert.NewConverter(root, *srcDir, *outDir, *version)
+	converter := convert.NewConverter(root, srcDir, outDir, version)
 	if err := converter.Convert(); err != nil {
 		fmt.Fprintf(os.Stderr, "error converting: %v\n", err)
 		os.Exit(1)
 	}
 
 	convWarnings := converter.Warnings()
-	if *verbose && len(convWarnings) > 0 {
+	if verbose && len(convWarnings) > 0 {
 		fmt.Printf("  Conversion warnings: %d\n", len(convWarnings))
 		for _, w := range convWarnings {
 			fmt.Printf("    %s\n", w)
@@ -124,37 +143,103 @@ func main() {
 	}
 
 	files := converter.Files()
-	if *verbose {
+	if verbose {
 		fmt.Printf("  Generated %d files\n", len(files))
 	}
 
 	// Phase 5: Nav generation
-	if *verbose {
+	if verbose {
 		fmt.Println("Phase 5: Generating nav...")
 	}
 	navRoot := nav.BuildNav(files)
 	navYAML := nav.GenerateYAML(navRoot)
 
-	if *mkdocsFile != "" {
-		if _, err := os.Stat(*mkdocsFile); err == nil {
-			if err := nav.UpdateMkdocsYML(*mkdocsFile, navYAML, *version); err != nil {
+	if mkdocsFile != "" {
+		if _, err := os.Stat(mkdocsFile); err == nil {
+			if err := nav.UpdateMkdocsYML(mkdocsFile, navYAML, version); err != nil {
 				fmt.Fprintf(os.Stderr, "error updating mkdocs.yml: %v\n", err)
 				os.Exit(1)
 			}
-			if *verbose {
-				fmt.Printf("  Updated %s\n", *mkdocsFile)
+			if verbose {
+				fmt.Printf("  Updated %s\n", mkdocsFile)
 			}
-		} else if *verbose {
-			fmt.Printf("  %s not found, skipping nav update\n", *mkdocsFile)
+		} else if verbose {
+			fmt.Printf("  %s not found, skipping nav update\n", mkdocsFile)
 		}
 	}
 
 	// Phase 6: Validation
-	if *doValidate {
-		if *verbose {
-			fmt.Println("Phase 6: Validating...")
+	runValidation(doValidate, verbose, outDir, warnings, convWarnings, len(files))
+}
+
+// runRST runs the RST conversion pipeline.
+func runRST(
+	srcDir, outDir, mkdocsFile, version, copyright, pgadminSrc string,
+	doValidate, verbose bool,
+) {
+	if verbose {
+		fmt.Println("Converting RST documentation...")
+	}
+
+	converter := rst.NewConverter(
+		srcDir, outDir, version, copyright, pgadminSrc, verbose)
+
+	if err := converter.Convert(); err != nil {
+		fmt.Fprintf(os.Stderr, "error converting RST: %v\n", err)
+		os.Exit(1)
+	}
+
+	convWarnings := converter.Warnings()
+	if verbose && len(convWarnings) > 0 {
+		fmt.Printf("  Conversion warnings: %d\n", len(convWarnings))
+		for _, w := range convWarnings {
+			fmt.Printf("    %s\n", w)
 		}
-		result, err := validate.ValidateDir(*outDir)
+	}
+
+	files := converter.Files()
+	if verbose {
+		fmt.Printf("  Generated %d files\n", len(files))
+	}
+
+	// Nav generation
+	if verbose {
+		fmt.Println("Generating nav...")
+	}
+	navRoot := nav.BuildNav(files)
+	navYAML := nav.GenerateYAML(navRoot)
+
+	if mkdocsFile != "" {
+		if _, err := os.Stat(mkdocsFile); err == nil {
+			if err := nav.UpdateMkdocsYML(mkdocsFile, navYAML, version); err != nil {
+				fmt.Fprintf(os.Stderr, "error updating mkdocs.yml: %v\n", err)
+				os.Exit(1)
+			}
+			if verbose {
+				fmt.Printf("  Updated %s\n", mkdocsFile)
+			}
+		} else if verbose {
+			fmt.Printf("  %s not found, skipping nav update\n", mkdocsFile)
+		}
+	}
+
+	// Validation
+	runValidation(doValidate, verbose, outDir, nil, convWarnings, len(files))
+}
+
+// runValidation runs link validation if requested.
+func runValidation(
+	doValidate, verbose bool,
+	outDir string,
+	parseWarnings []string,
+	convWarnings []string,
+	fileCount int,
+) {
+	if doValidate {
+		if verbose {
+			fmt.Println("Validating...")
+		}
+		result, err := validate.ValidateDir(outDir)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error validating: %v\n", err)
 			os.Exit(1)
@@ -178,8 +263,8 @@ func main() {
 	}
 
 	// Summary
-	totalWarnings := len(warnings) + len(convWarnings)
-	fmt.Printf("\nConversion complete: %d files generated", len(files))
+	totalWarnings := len(parseWarnings) + len(convWarnings)
+	fmt.Printf("\nConversion complete: %d files generated", fileCount)
 	if totalWarnings > 0 {
 		fmt.Printf(", %d warnings", totalWarnings)
 	}

@@ -9,7 +9,11 @@
 
 package convert
 
+import (
+	"github.com/pgEdge/postgresql-docs/builder/shared"
+)
+
 // ExportSlugify exposes slugify for use by other packages.
 func ExportSlugify(s string) string {
-	return slugify(s)
+	return shared.Slugify(s)
 }
