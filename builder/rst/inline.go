@@ -166,7 +166,20 @@ func ConvertInline(
 			})
 	}
 
-	// Step 9: Backslash escapes
+	// Step 9: Bare backtick references with ~ or ! prefix
+	// `~module.Class()` -> `Class()`, `!name` -> `name`
+	text = regexp.MustCompile("`~([^`]+)`").ReplaceAllStringFunc(
+		text, func(m string) string {
+			inner := m[2 : len(m)-1] // strip `~ and `
+			if idx := strings.LastIndex(inner, "."); idx >= 0 {
+				inner = inner[idx+1:]
+			}
+			return "`" + inner + "`"
+		})
+	text = regexp.MustCompile("`!([^`]+)`").ReplaceAllString(
+		text, "`$1`")
+
+	// Step 10: Backslash escapes
 	text = reBackslashEscape.ReplaceAllString(text, "$1")
 
 	// Restore literal placeholders
@@ -191,35 +204,54 @@ func convertRole(
 	fileMap map[string]string,
 	currentFile string,
 ) string {
+	// Handle Sphinx prefix modifiers:
+	// ~ = show only last component (e.g. ~mod.Class -> Class)
+	// ! = suppress linking (just show text)
+	shorten := false
+	if strings.HasPrefix(content, "~") {
+		shorten = true
+		content = content[1:]
+	} else if strings.HasPrefix(content, "!") {
+		content = content[1:]
+	}
+
+	display := content
+	if shorten {
+		// Show only the part after the last dot
+		if idx := strings.LastIndex(content, "."); idx >= 0 {
+			display = content[idx+1:]
+		}
+	}
+
 	switch role {
 	case "ref":
 		return convertRef(content, labelMap, currentFile)
 	case "doc":
 		return convertDoc(content, fileMap, currentFile)
 	case "index":
-		return content
+		return display
 	case "menuselection", "guilabel":
-		return "**" + content + "**"
+		return "**" + display + "**"
 	case "kbd":
-		return "`" + content + "`"
+		return "`" + display + "`"
 	case "file", "command", "program", "envvar", "option",
 		"class", "func", "meth", "attr", "exc", "obj",
 		"mod", "data", "const", "type", "term",
 		"sql", "samp":
-		return "`" + content + "`"
+		return "`" + display + "`"
 	case "code":
-		return "`" + content + "`"
+		return "`" + display + "`"
 	case "pep":
 		return "[PEP " + content + "](https://peps.python.org/pep-" +
 			strings.TrimLeft(content, "0") + "/)"
 	case "abbr":
-		return content
+		return display
 	case "sup":
-		return "<sup>" + content + "</sup>"
+		return "<sup>" + display + "</sup>"
 	case "sub":
-		return "<sub>" + content + "</sub>"
+		return "<sub>" + display + "</sub>"
 	default:
-		return "`" + content + "`"
+		return "`" + display + "`"
 	}
 }
 

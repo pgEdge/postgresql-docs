@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pgEdge/postgresql-docs/builder/shared"
@@ -545,14 +546,29 @@ func handleSeeAlso(
 ) error {
 	w.BlankLine()
 	w.WriteString("!!! tip \"See Also\"\n\n")
+
+	// Combine arg and body (like admonitions)
+	fullText := ""
+	if node.DirectiveArg != "" {
+		fullText = node.DirectiveArg
+	}
 	if node.Body != "" {
-		for _, line := range strings.Split(
-			convertInlineCtx(ctx, node.Body), "\n") {
-			if line == "" {
-				w.WriteString("\n")
-			} else {
-				w.WriteString("    " + line + "\n")
-			}
+		if fullText != "" {
+			fullText += " " + node.Body
+		} else {
+			fullText = node.Body
+		}
+	}
+
+	// Resolve anonymous hyperlinks: `text`__ with .. __: URL
+	fullText = resolveAnonymousLinks(fullText)
+
+	content := convertInlineCtx(ctx, fullText)
+	for _, line := range strings.Split(content, "\n") {
+		if line == "" {
+			w.WriteString("\n")
+		} else {
+			w.WriteString("    " + line + "\n")
 		}
 	}
 	return nil
@@ -699,6 +715,42 @@ func handleInclude(
 			"*See: `%s`*\n", node.DirectiveArg))
 	}
 	return nil
+}
+
+// reAnonymousTarget matches ".. __: URL" anywhere in text.
+var reAnonymousTarget = regexp.MustCompile(
+	`\.\.\s+__:\s*(https?://\S+)`)
+
+// reAnonymousRef matches "`text`__" (anonymous hyperlink reference).
+var reAnonymousRef = regexp.MustCompile("`([^`]+)`__")
+
+// resolveAnonymousLinks replaces RST anonymous hyperlink references
+// (`text`__ paired with .. __: URL) with inline Markdown links.
+func resolveAnonymousLinks(text string) string {
+	// Collect all anonymous targets in order
+	targets := reAnonymousTarget.FindAllStringSubmatch(text, -1)
+	// Remove the target definitions from the text
+	text = reAnonymousTarget.ReplaceAllString(text, "")
+
+	// Replace `text`__ with [text](url) in order
+	targetIdx := 0
+	text = reAnonymousRef.ReplaceAllStringFunc(text, func(m string) string {
+		sub := reAnonymousRef.FindStringSubmatch(m)
+		linkText := sub[1]
+		if targetIdx < len(targets) {
+			url := targets[targetIdx][1]
+			targetIdx++
+			return "[" + linkText + "](" + url + ")"
+		}
+		return linkText
+	})
+
+	// Clean up extra whitespace from removed targets
+	text = strings.TrimSpace(text)
+	for strings.Contains(text, "  ") {
+		text = strings.ReplaceAll(text, "  ", " ")
+	}
+	return text
 }
 
 // relativeImagePath computes the relative path from the current
