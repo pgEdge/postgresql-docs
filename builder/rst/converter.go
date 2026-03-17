@@ -217,7 +217,7 @@ func convertDirective(
 	node *Node,
 	w *shared.MarkdownWriter,
 ) {
-	handler, ok := directiveHandlers[node.DirectiveName]
+	handler, ok := directiveHandlers[strings.ToLower(node.DirectiveName)]
 	if !ok {
 		ctx.Warnings = append(ctx.Warnings,
 			fmt.Sprintf("unhandled directive: %s", node.DirectiveName))

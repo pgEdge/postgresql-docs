@@ -62,6 +62,39 @@ func initDirectiveHandlers() {
 		"only":           handleOnly,
 		"highlight":      handleSkipDirective,
 		"index":          handleSkipDirective,
+
+		// Sphinx domain directives (API documentation)
+		"class":     handleAPIDef,
+		"method":    handleAPIDef,
+		"function":  handleAPIDef,
+		"attribute": handleAPIDef,
+		"data":      handleAPIDef,
+		"exception": handleAPIDef,
+		"module":    handleAPIDef,
+		"decorator": handleAPIDef,
+
+		// Sphinx autodoc directives
+		"autoclass":     handleAPIDef,
+		"autofunction":  handleAPIDef,
+		"automethod":    handleAPIDef,
+		"autoattribute": handleAPIDef,
+		"automodule":    handleAPIDef,
+		"autoexception": handleAPIDef,
+
+		// Sphinx misc directives
+		"rubric":         handleRubric,
+		"parsed-literal": handleParsedLiteral,
+		"sectionauthor":  handleSkipDirective,
+		"testsetup":      handleSkipDirective,
+		"testcode":       handleSkipDirective,
+		"testcleanup":    handleSkipDirective,
+		"doctest":        handleDoctest,
+		"cssclass":       handleSkipDirective,
+		"ifconfig":       handleSkipDirective,
+		"todolist":       handleSkipDirective,
+		"extension":      handleAPIDef,
+		"include":        handleInclude,
+		"code":           handleCodeBlock,
 	}
 }
 
@@ -560,6 +593,110 @@ func handleOnly(
 		for _, child := range subRoot.Children {
 			convertNode(ctx, child, w)
 		}
+	}
+	return nil
+}
+
+// handleAPIDef converts Sphinx domain directives (class, method,
+// function, attribute, data, exception, etc.) to a definition-style
+// block with the signature in a code span and the body indented.
+func handleAPIDef(
+	ctx *ConvertContext,
+	node *Node,
+	w *shared.MarkdownWriter,
+) error {
+	kind := node.DirectiveName
+	sig := node.DirectiveArg
+
+	w.BlankLine()
+
+	// For auto* directives, the arg is the object name
+	// For regular directives, the arg is the full signature
+	if sig != "" {
+		// Strip "auto" prefix for display
+		displayKind := strings.TrimPrefix(kind, "auto")
+		w.WriteString(fmt.Sprintf("*%s* `%s`\n",
+			displayKind, convertInlineCtx(ctx, sig)))
+	}
+
+	// Render body content
+	if len(node.Children) > 0 {
+		subW := shared.NewMarkdownWriter()
+		for _, child := range node.Children {
+			convertNode(ctx, child, subW)
+		}
+		body := strings.TrimSpace(subW.String())
+		if body != "" {
+			w.BlankLine()
+			w.WriteString(body + "\n")
+		}
+	} else if node.Body != "" {
+		subRoot := Parse(node.Body)
+		subW := shared.NewMarkdownWriter()
+		for _, child := range subRoot.Children {
+			convertNode(ctx, child, subW)
+		}
+		body := strings.TrimSpace(subW.String())
+		if body != "" {
+			w.BlankLine()
+			w.WriteString(body + "\n")
+		}
+	}
+
+	return nil
+}
+
+// handleRubric converts a rubric directive to a bold heading.
+func handleRubric(
+	ctx *ConvertContext,
+	node *Node,
+	w *shared.MarkdownWriter,
+) error {
+	w.BlankLine()
+	w.WriteString("**" + convertInlineCtx(ctx, node.DirectiveArg) + "**\n")
+	return nil
+}
+
+// handleParsedLiteral converts a parsed-literal to a code block.
+func handleParsedLiteral(
+	ctx *ConvertContext,
+	node *Node,
+	w *shared.MarkdownWriter,
+) error {
+	w.StartCodeBlock("")
+	if node.Body != "" {
+		w.WriteString(node.Body)
+	}
+	w.EndCodeBlock()
+	return nil
+}
+
+// handleDoctest converts doctest blocks to code blocks.
+func handleDoctest(
+	ctx *ConvertContext,
+	node *Node,
+	w *shared.MarkdownWriter,
+) error {
+	if node.Body != "" {
+		w.StartCodeBlock("python")
+		w.WriteString(node.Body)
+		w.EndCodeBlock()
+	}
+	return nil
+}
+
+// handleInclude is a no-op for include directives (the included
+// content is not available without the Sphinx build system).
+func handleInclude(
+	ctx *ConvertContext,
+	node *Node,
+	w *shared.MarkdownWriter,
+) error {
+	// Can't resolve includes without the Sphinx build
+	if node.DirectiveArg != "" {
+		w.BlankLine()
+		w.WriteString(fmt.Sprintf(
+			"*See: `%s`*\n", node.DirectiveArg))
 	}
 	return nil
 }

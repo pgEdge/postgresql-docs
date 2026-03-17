@@ -161,10 +161,14 @@ func convertRole(
 		return "`" + content + "`"
 	case "file", "command", "program", "envvar", "option",
 		"class", "func", "meth", "attr", "exc", "obj",
-		"mod", "data", "const", "type", "term":
+		"mod", "data", "const", "type", "term",
+		"sql", "samp":
 		return "`" + content + "`"
 	case "code":
 		return "`" + content + "`"
+	case "pep":
+		return "[PEP " + content + "](https://peps.python.org/pep-" +
+			strings.TrimLeft(content, "0") + "/)"
 	case "abbr":
 		// :abbr:`text (expansion)`
 		return content
