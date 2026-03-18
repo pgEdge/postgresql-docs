@@ -3,42 +3,11 @@
 ![image](static/postgrest.png)
 
 [![image](https://img.shields.io/github/stars/postgrest/postgrest.svg?style=social)](https://github.com/PostgREST/postgrest)
-
 [![image](https://img.shields.io/github/v/release/PostgREST/postgrest.svg)](https://github.com/PostgREST/postgrest/releases)
-
 [![image](https://img.shields.io/docker/pulls/postgrest/postgrest.svg)](https://hub.docker.com/r/postgrest/postgrest/)
-
 [![image](https://img.shields.io/badge/Donate-Patreon-orange.svg?colorB=F96854)](https://www.patreon.com/postgrest)
 
-|
-
 PostgREST is a standalone web server that turns your PostgreSQL database directly into a RESTful API. The structural constraints and permissions in the database determine the API endpoints and operations.
-
-## Sponsors
-
-[![image](static/cybertec-dark.svg)](https://www.cybertec-postgresql.com/en/?utm_source=postgrest.org&utm_medium=referral&utm_campaign=postgrest)
-
-[![image](static/cybertec.svg)](https://www.cybertec-postgresql.com/en/?utm_source=postgrest.org&utm_medium=referral&utm_campaign=postgrest)
-
-[![image](static/supabase-dark.svg)](https://supabase.com/?utm_source=postgrest%20backers&utm_medium=open%20source%20partner&utm_campaign=postgrest%20backers%20github&utm_term=homepage)
-
-[![image](static/supabase.svg)](https://supabase.com/?utm_source=postgrest%20backers&utm_medium=open%20source%20partner&utm_campaign=postgrest%20backers%20github&utm_term=homepage)
-
-[![image](static/euronodes.svg)](https://www.euronodes.com/postgrest)
-
-[![image](static/euronodes.svg)](https://www.euronodes.com/postgrest)
-
-|
-
-[![image](static/neon-dark.jpg)](https://neon.com/?utm_source=sponsor&utm_campaign=postgrest)
-
-[![image](static/neon.jpg)](https://neon.com/?utm_source=sponsor&utm_campaign=postgrest)
-
-[![image](static/bytebase-dark.svg)](https://www.bytebase.com/?utm_source=sponsor&utm_campaign=postgrest)
-
-[![image](static/bytebase.svg)](https://www.bytebase.com/?utm_source=sponsor&utm_campaign=postgrest)
-
-|
 
 ## Database as Single Source of Truth
 
@@ -142,10 +111,17 @@ Here are some companies that use PostgREST in production.
 
 Please see the [Contributing guidelines](https://github.com/PostgREST/postgrest/blob/main/CONTRIBUTING.md) in the main PostgREST repository.
 
-<script type="text/javascript"> let hash = window.location.hash;
+<script type="text/javascript">
+  let hash = window.location.hash;
 
-const redirects = { // Tables and Views '#release-notes': '#releases', };
+  const redirects = {
+    // Tables and Views
+    '#release-notes': '#releases',
+  };
 
-let willRedirectTo = redirects[hash];
+  let willRedirectTo = redirects[hash];
 
-if (willRedirectTo) { window.location.href = willRedirectTo; } </script>
+  if (willRedirectTo) {
+    window.location.href = willRedirectTo;
+  }
+</script>

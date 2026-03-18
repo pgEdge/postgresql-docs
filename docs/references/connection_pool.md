@@ -25,11 +25,14 @@ PostgREST sets the connection [application_name](https://www.postgresql.org/docs
 For example, you can query [pg_stat_activity](https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY-VIEW) to get the PostgREST version:
 
 ```postgres
+select distinct usename, application_name
+from pg_stat_activity
+where usename = 'authenticator';
+
+   usename     |     application_name
+---------------+--------------------------
+ authenticator | PostgREST 12.1
 ```
-
-select distinct usename, application_name from pg_stat_activity where usename = 'authenticator';
-
-usename     |     application_name ---------------+-------------------------- authenticator | PostgREST 12.1
 
 ## Connection lifetime
 
@@ -44,32 +47,33 @@ If all the available connections in the pool are busy, an HTTP request will wait
 If the request reaches the timeout, it will be aborted with the following response:
 
 ```http
-```
-
 HTTP/1.1 504 Gateway Timeout
 
-{"code":"PGRST003", "details":null, "hint":null, "message":"Timed out acquiring connection from connection pool."}
+{"code":"PGRST003",
+ "details":null,
+ "hint":null,
+ "message":"Timed out acquiring connection from connection pool."}
+```
 
 !!! important
 
+    Getting this error message is an indicator of a performance issue. To solve it, you can:
 
-Getting this error message is an indicator of a performance issue. To solve it, you can:
+    - Reduce your queries execution time.
 
-- Reduce your queries execution time.
+    - Check the request [Execution plan](observability.md#explain_plan) to tune your query, this usually means adding indexes.
 
-- Check the request [Execution plan](observability.md#explain_plan) to tune your query, this usually means adding indexes.
+    - Reduce the amount of requests.
 
-- Reduce the amount of requests.
+    - Reduce write requests. Do [Bulk Insert](../api/references/api/tables_views.md#bulk_insert) (or [Upsert](../api/references/api/tables_views.md#upsert)) instead of inserting rows one by one.
 
-- Reduce write requests. Do [Bulk Insert](../api/references/api/tables_views.md#bulk_insert) (or [Upsert](../api/references/api/tables_views.md#upsert)) instead of inserting rows one by one.
+    - Reduce read requests. Use [Resource Embedding](../api/references/api/resource_embedding.md#resource_embedding). Combine unrelated data into a single request using custom database views or functions.
 
-- Reduce read requests. Use [Resource Embedding](../api/references/api/resource_embedding.md#resource_embedding). Combine unrelated data into a single request using custom database views or functions.
+    - Use [Functions as RPC](../api/references/api/functions.md#functions) for combining read and write logic into a single request.
 
-- Use [Functions as RPC](../api/references/api/functions.md#functions) for combining read and write logic into a single request.
+    - Increase the [db-pool](configuration.md#db-pool) size.
 
-- Increase the [db-pool](configuration.md#db-pool) size.
-
-- Not a panacea since connections can't grow infinitely. Try the previous recommendations before this.
+    - Not a panacea since connections can't grow infinitely. Try the previous recommendations before this.
 <a id="automatic_recovery"></a>
 
 ## Automatic Recovery
@@ -97,5 +101,4 @@ Also set [db-channel-enabled](configuration.md#db-channel-enabled) to `false` si
 
 !!! note
 
-
-It's not recommended to use an external connection pooler. [Our benchmarks](https://github.com/PostgREST/postgrest/issues/2294#issuecomment-1139148672) indicate it provides much lower performance than PostgREST built-in pool.
+    It's not recommended to use an external connection pooler. [Our benchmarks](https://github.com/PostgREST/postgrest/issues/2294#issuecomment-1139148672) indicate it provides much lower performance than PostgREST built-in pool.

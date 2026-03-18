@@ -11,13 +11,17 @@ Suppose you want to use a `uuid` type for a primary key and want to present it s
 For this, let's create a domain based on `uuid`.
 
 ```postgres
-```
-
 create domain app_uuid as uuid;
 
--- and use it as our table PK. create table profiles( id   app_uuid , name text );
+-- and use it as our table PK.
+create table profiles(
+  id   app_uuid
+, name text
+);
 
--- some data for the example insert into profiles values ('846c4ffd-92ce-4de7-8d11-8e29929f4ec4', 'John Doe');
+-- some data for the example
+insert into profiles values ('846c4ffd-92ce-4de7-8d11-8e29929f4ec4', 'John Doe');
+```
 
 ## Domain Response Format
 
@@ -26,46 +30,44 @@ We can shorten the `uuid` with `base64` encoding. Let's use JSON as our response
 To change the domain format for JSON, create a function that converts `app_uuid` to `json`.
 
 ```postgres
+-- the name of the function is arbitrary
+CREATE OR REPLACE FUNCTION json(app_uuid) RETURNS json AS $$
+  select to_json(encode(uuid_send($1),'base64'));
+$$ LANGUAGE SQL IMMUTABLE;
+
+-- check it works
+select json('846c4ffd-92ce-4de7-8d11-8e29929f4ec4'::app_uuid);
+            json
+----------------------------
+ "hGxP/ZLOTeeNEY4pkp9OxA=="
 ```
-
--- the name of the function is arbitrary CREATE OR REPLACE FUNCTION json(app_uuid) RETURNS json AS $$ select to_json(encode(uuid_send($1),'base64')); $$ LANGUAGE SQL IMMUTABLE;
-
--- check it works select json('846c4ffd-92ce-4de7-8d11-8e29929f4ec4'::app_uuid);
-
-### json
-
-"hGxP/ZLOTeeNEY4pkp9OxA=="
 
 Then create a CAST to tell PostgREST to convert it automatically whenever a JSON response is requested.
 
 ```postgres
-```
-
 CREATE CAST (app_uuid AS json) WITH FUNCTION json(app_uuid) AS IMPLICIT;
+```
 
 With this you can obtain the data in the shortened format.
 
 ```bash
+curl "http://localhost:3000/profiles" \
+  -H "Accept: application/json"
 ```
-
-curl "http://localhost:3000/profiles"  -H "Accept: application/json"
 
 ```json
-```
-
 [{"id":"hGxP/ZLOTeeNEY4pkp9OxA==","name":"John Doe"}]
+```
 
 !!! note
 
+    - Casts on domains are ignored by PostgreSQL, their interpretation is left to the application. We're discussing the possibility of including the Domain Representations behavior on [pgsql-hackers](https://www.postgresql.org/message-id/flat/CAGRrpzZKa%2BGu91j1SOvN3tM1f-7Gh_w441c5nAX1QqdH3Q31Lg%40mail.gmail.com).
 
-- Casts on domains are ignored by PostgreSQL, their interpretation is left to the application. We're discussing the possibility of including the Domain Representations behavior on [pgsql-hackers](https://www.postgresql.org/message-id/flat/CAGRrpzZKa%2BGu91j1SOvN3tM1f-7Gh_w441c5nAX1QqdH3Q31Lg%40mail.gmail.com).
-
-- It would make more sense to use `base58` encoding as it's URL friendly but for simplicity we use `base64` (supported natively in PostgreSQL).
+    - It would make more sense to use `base58` encoding as it's URL friendly but for simplicity we use `base64` (supported natively in PostgreSQL).
 
 !!! important
 
-
-After creating a cast over a domain, you must refresh PostgREST schema cache. See [Schema Cache Reloading](../../../references/schema_cache.md#schema_reloading).
+    After creating a cast over a domain, you must refresh PostgREST schema cache. See [Schema Cache Reloading](../../../references/schema_cache.md#schema_reloading).
 
 ## Domain Filter Format
 
@@ -74,71 +76,78 @@ For [Horizontal Filtering](tables_views.md#h_filter) to work with the shortened 
 PostgREST considers the URL query string to be, in the most generic sense, `text`. So let's create a function that converts `text` to `app_uuid`.
 
 ```postgres
+-- the name of the function is arbitrary
+CREATE OR REPLACE FUNCTION app_uuid(text) RETURNS app_uuid AS $$
+  select substring(decode($1,'base64')::text from 3)::uuid;
+$$ LANGUAGE SQL IMMUTABLE;
+
+-- plus a CAST to tell PostgREST to use this function
+CREATE CAST (text AS app_uuid) WITH FUNCTION app_uuid(text) AS IMPLICIT;
 ```
-
--- the name of the function is arbitrary CREATE OR REPLACE FUNCTION app_uuid(text) RETURNS app_uuid AS $$ select substring(decode($1,'base64')::text from 3)::uuid; $$ LANGUAGE SQL IMMUTABLE;
-
--- plus a CAST to tell PostgREST to use this function CREATE CAST (text AS app_uuid) WITH FUNCTION app_uuid(text) AS IMPLICIT;
 
 Now you can filter as usual.
 
 ```bash
+curl "http://localhost:3000/profiles?id=eq.ZLOTeeNEY4pkp9OxA==" \
+  -H "Accept: application/json"
 ```
-
-curl "http://localhost:3000/profiles?id=eq.ZLOTeeNEY4pkp9OxA=="  -H "Accept: application/json"
 
 ```json
-```
-
 [{"id":"hGxP/ZLOTeeNEY4pkp9OxA==","name":"John Doe"}]
+```
 
 !!! note
 
-
-If there's no CAST from `text` to `app_uuid` defined, the filter will still work with the native uuid format (`846c4ffd-92ce-4de7-8d11-8e29929f4ec4`).
+    If there's no CAST from `text` to `app_uuid` defined, the filter will still work with the native uuid format (`846c4ffd-92ce-4de7-8d11-8e29929f4ec4`).
 
 ## Domain Request Body Format
 
 To accept the shortened format in a JSON request body, for example when creating a new record, define a `json` to `app_uuid` conversion.
 
 ```postgres
-```
-
--- the name of the function is arbitrary CREATE OR REPLACE FUNCTION app_uuid(json) RETURNS public.app_uuid AS $$ -- here we reuse the previous app_uuid(text) function select app_uuid($1 #>> '{}'); $$ LANGUAGE SQL IMMUTABLE;
+-- the name of the function is arbitrary
+CREATE OR REPLACE FUNCTION app_uuid(json) RETURNS public.app_uuid AS $$
+  -- here we reuse the previous app_uuid(text) function
+  select app_uuid($1 #>> '{}');
+$$ LANGUAGE SQL IMMUTABLE;
 
 CREATE CAST (json AS public.app_uuid) WITH FUNCTION app_uuid(json) AS IMPLICIT;
+```
 
 Now we can [Insert](tables_views.md#insert) (or [Update](tables_views.md#update)) as usual.
 
 ```bash
-```
-
-curl "http://localhost:3000/profiles"  -H "Prefer: return=representation"  -H "Content-Type: application/json"  -d @- <<JSON
+curl "http://localhost:3000/profiles" \
+  -H "Prefer: return=representation" \
+  -H "Content-Type: application/json" \
+  -d @- <<JSON
 
 {"id":"zH7HbFJUTfy/GZpwuirpuQ==","name":"Jane Doe"}
 
 JSON
+```
 
 The response:
 
 ```json
-```
-
 [{"id":"zH7HbFJUTfy/GZpwuirpuQ==","name":"Jane Doe"}]
+```
 
 Note that on the database side we have our regular `uuid` format.
 
 ```postgres
-```
-
 select * from profiles;
 
-id                  |   name --------------------------------------+---------- 846c4ffd-92ce-4de7-8d11-8e29929f4ec4 | John Doe cc7ec76c-5254-4dfc-bf19-9a70ba2ae9b9 | Jane Doe (2 rows)
+                  id                  |   name
+--------------------------------------+----------
+ 846c4ffd-92ce-4de7-8d11-8e29929f4ec4 | John Doe
+ cc7ec76c-5254-4dfc-bf19-9a70ba2ae9b9 | Jane Doe
+(2 rows)
+```
 
 !!! note
 
-
-If there's no CAST from `json` to `app_uuid` defined, the request body will still work with the native uuid format (`cc7ec76c-5254-4dfc-bf19-9a70ba2ae9b9`).
+    If there's no CAST from `json` to `app_uuid` defined, the request body will still work with the native uuid format (`cc7ec76c-5254-4dfc-bf19-9a70ba2ae9b9`).
 
 ## Advantages over Views
 
@@ -154,7 +163,6 @@ Domain Representations avoid all the above drawbacks. Their only drawback is tha
 
 !!! note
 
+    Why not create a [base type](https://www.postgresql.org/docs/current/sql-createtype.html#id-1.9.3.94.5.8) instead? `CREATE TYPE app_uuid (INTERNALLENGTH = 22, INPUT = app_uuid_parser, OUTPUT = app_uuid_formatter)`.
 
-Why not create a [base type](https://www.postgresql.org/docs/current/sql-createtype.html#id-1.9.3.94.5.8) instead? `CREATE TYPE app_uuid (INTERNALLENGTH = 22, INPUT = app_uuid_parser, OUTPUT = app_uuid_formatter)`.
-
-Creating base types need superuser, which is restricted on cloud hosted databases. Additionally this way lets "how the data is presented" dictate "how the data is stored" which would be backwards.
+    Creating base types need superuser, which is restricted on cloud hosted databases. Additionally this way lets "how the data is presented" dictate "how the data is stored" which would be backwards.

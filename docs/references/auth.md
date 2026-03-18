@@ -14,14 +14,15 @@ There are three types of roles used by PostgREST, the **authenticator**, **anony
 The authenticator role is used for connecting to the database and should be configured to have very limited access. It is a chameleon whose job is to "become" other users to service authenticated HTTP requests.
 
 ```sql
-```
 
-CREATE ROLE authenticator LOGIN NOINHERIT NOCREATEDB NOCREATEROLE NOSUPERUSER; CREATE ROLE anonymous NOLOGIN; CREATE ROLE webuser NOLOGIN;
+CREATE ROLE authenticator LOGIN NOINHERIT NOCREATEDB NOCREATEROLE NOSUPERUSER;
+CREATE ROLE anonymous NOLOGIN;
+CREATE ROLE webuser NOLOGIN;
+```
 
 !!! note
 
-
-The names "authenticator" and "anon" names are configurable and not sacred, we simply choose them for clarity. See [db-uri](configuration.md#db-uri) and [db-anon-role](configuration.md#db-anon-role).
+    The names "authenticator" and "anon" names are configurable and not sacred, we simply choose them for clarity. See [db-uri](configuration.md#db-uri) and [db-anon-role](configuration.md#db-anon-role).
 <a id="user_impersonation"></a>
 
 ### User Impersonation
@@ -34,8 +35,7 @@ This role switching mechanism is called **user impersonation**. In PostgreSQL it
 
 !!! note
 
-
-The impersonated roles will have their settings applied. See [Impersonated Role Settings](transactions.md#impersonated_settings).
+    The impersonated roles will have their settings applied. See [Impersonated Role Settings](transactions.md#impersonated_settings).
 <a id="jwt_auth"></a>
 
 ## JWT Authentication
@@ -43,23 +43,24 @@ The impersonated roles will have their settings applied. See [Impersonated Role 
 We use [JSON Web Tokens](https://datatracker.ietf.org/doc/html/rfc7519/) to authenticate API requests, this allows us to be stateless and not require database lookups for verification. As you'll recall a JWT contains a list of cryptographically signed claims. All claims are allowed but PostgREST cares specifically about a claim called role (configurable with [JWT Role Extraction](#jwt_role_extract)).
 
 ```json
+{
+  "role": "user123"
+}
 ```
-
-{ "role": "user123" }
 
 When a request contains a valid JWT with a role claim PostgREST will switch to the database role with that name for the duration of the HTTP request.
 
 ```sql
-```
-
 SET LOCAL ROLE user123;
+```
 
 Note that the database administrator must allow the authenticator role to switch into this user by previously executing
 
 ```sql
+GRANT user123 TO authenticator;
+-- similarly for the anonymous role
+-- GRANT anonymous TO authenticator;
 ```
-
-GRANT user123 TO authenticator; -- similarly for the anonymous role -- GRANT anonymous TO authenticator;
 
 If the client included no JWT (or one without a role claim) then PostgREST switches into the anonymous role. The database administrator must set the anonymous role permissions correctly to prevent anonymous users from seeing or changing things they shouldn't.
 <a id="bearer_auth"></a>
@@ -69,9 +70,9 @@ If the client included no JWT (or one without a role claim) then PostgREST switc
 To make an authenticated request the client must include an `Authorization` HTTP header with the value `Bearer <jwt>`. For instance:
 
 ```bash
+curl "http://localhost:3000/foo" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiamRvZSIsImV4cCI6MTQ3NTUxNjI1MH0.GYDZV3yM0gqvuEtJmfpplLBXSGYnke_Pvnl0tbKAjB4"
 ```
-
-curl "http://localhost:3000/foo"  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiamRvZSIsImV4cCI6MTQ3NTUxNjI1MH0.GYDZV3yM0gqvuEtJmfpplLBXSGYnke_Pvnl0tbKAjB4"
 
 The `Bearer` header value can be used with or without capitalization(`bearer`).
 <a id="jwt_generation"></a>
@@ -90,9 +91,8 @@ PostgREST supports both symmetric and asymmetric keys for verifying the signatur
 In the case of symmetric cryptography the signer and verifier share the same secret passphrase, which can be configured with [jwt-secret](configuration.md#jwt-secret). If it is set to a simple string then PostgREST interprets it as an HMAC-SHA256 passphrase.
 
 ```ini
-```
-
 jwt-secret = "reallyreallyreallyreallyverysafe"
+```
 <a id="asym_keys"></a>
 
 ### Asymmetric Keys
@@ -102,37 +102,39 @@ In asymmetric cryptography the signer uses the private key and the verifier the 
 As described in the [Configuration](configuration.md#configuration) section, PostgREST accepts a `jwt-secret` config file parameter. However you can also specify a literal JSON Web Key (JWK) or set. For example, you can use an RSA-256 public key encoded as a JWK:
 
 ```json
+{
+  "alg":"RS256",
+  "e":"AQAB",
+  "key_ops":["verify"],
+  "kty":"RSA",
+  "n":"9zKNYTaYGfGm1tBMpRT6FxOYrM720GhXdettc02uyakYSEHU2IJz90G_MLlEl4-WWWYoS_QKFupw3s7aPYlaAjamG22rAnvWu-rRkP5sSSkKvud_IgKL4iE6Y2WJx2Bkl1XUFkdZ8wlEUR6O1ft3TS4uA-qKifSZ43CahzAJyUezOH9shI--tirC028lNg767ldEki3WnVr3zokSujC9YJ_9XXjw2hFBfmJUrNb0-wldvxQbFU8RPXip-GQ_JPTrCTZhrzGFeWPvhA6Rqmc3b1PhM9jY7Dur1sjYWYVyXlFNCK3c-6feo5WlRfe1aCWmwZQh6O18eTmLeT4nWYkDzQ"
+}
 ```
-
-{ "alg":"RS256", "e":"AQAB", "key_ops":["verify"], "kty":"RSA", "n":"9zKNYTaYGfGm1tBMpRT6FxOYrM720GhXdettc02uyakYSEHU2IJz90G_MLlEl4-WWWYoS_QKFupw3s7aPYlaAjamG22rAnvWu-rRkP5sSSkKvud_IgKL4iE6Y2WJx2Bkl1XUFkdZ8wlEUR6O1ft3TS4uA-qKifSZ43CahzAJyUezOH9shI--tirC028lNg767ldEki3WnVr3zokSujC9YJ_9XXjw2hFBfmJUrNb0-wldvxQbFU8RPXip-GQ_JPTrCTZhrzGFeWPvhA6Rqmc3b1PhM9jY7Dur1sjYWYVyXlFNCK3c-6feo5WlRfe1aCWmwZQh6O18eTmLeT4nWYkDzQ" }
 
 !!! note
 
-
-This could also be a JSON Web Key Set (JWKS) if it was contained within an array assigned to a `keys` member, e.g. `{ keys: [jwk1, jwk2] }`.
+    This could also be a JSON Web Key Set (JWKS) if it was contained within an array assigned to a `keys` member, e.g. `{ keys: [jwk1, jwk2] }`.
 
 Just pass it in as a single line string, escaping the quotes:
 
 ```ini
+jwt-secret = "{ \"alg\":\"RS256\", … }"
 ```
-
-jwt-secret = "{ "alg":"RS256", … }"
 
 To generate such a public/private key pair use a utility like [latchset/jose](https://github.com/latchset/jose).
 
 ```bash
-```
-
-jose jwk gen -i '{"alg": "RS256"}' -o rsa.jwk jose jwk pub -i rsa.jwk -o rsa.jwk.pub
+jose jwk gen -i '{"alg": "RS256"}' -o rsa.jwk
+jose jwk pub -i rsa.jwk -o rsa.jwk.pub
 
 # now rsa.jwk.pub contains the desired JSON object
+```
 
 You can specify the literal value as we saw earlier, or reference a filename to load the JWK from a file:
 
 ```ini
-```
-
 jwt-secret = "@rsa.jwk.pub"
+```
 
 #### kid verification
 
@@ -191,12 +193,11 @@ It's recommended to leave the JWT cache enabled as our load tests indicate ~20% 
 
 !!! note
 
+    - If the `jwt-secret` is changed and the config is reloaded, the JWT cache will reset.
 
-- If the `jwt-secret` is changed and the config is reloaded, the JWT cache will reset.
+    - JWTs that pass [JWT Signature Verification](#jwt_signature) are cached, regardless if they pass [JWT Claims Validation](#jwt_claims_validation). We do this to ensure responses stays fast under common failure cases (such as expired JWTs).
 
-- JWTs that pass [JWT Signature Verification](#jwt_signature) are cached, regardless if they pass [JWT Claims Validation](#jwt_claims_validation). We do this to ensure responses stays fast under common failure cases (such as expired JWTs).
-
-- You can use the [Server-Timing Header](observability.md#server-timing_header) to see the performance benefit of JWT caching.
+    - You can use the [Server-Timing Header](observability.md#server-timing_header) to see the performance benefit of JWT caching.
 <a id="jwt_role_extract"></a>
 
 ## JWT Role Extraction
@@ -227,39 +228,37 @@ The selected role value can also be sliced using the slice operator `[a:b]`. It 
 
 !!! important
 
-
-Make sure that you are not taking a slice where the start index comes after the end index like `[11:2]`. The result of this would be empty string and so no role would get selected.
+    Make sure that you are not taking a slice where the start index comes after the end index like `[11:2]`. The result of this would be empty string and so no role would get selected.
 
 Usage examples:
 
 ```bash
- # {"postgrest":{"roles": ["other", "author"]}}
- # the DSL accepts characters that are alphanumerical or one of "_$@" as keys
- jwt-role-claim-key = ".postgrest.roles[1]"
+# {"postgrest":{"roles": ["other", "author"]}}
+# the DSL accepts characters that are alphanumerical or one of "_$@" as keys
+jwt-role-claim-key = ".postgrest.roles[1]"
 
- # {"https://www.example.com/role": { "key": "author" }}
- # non-alphanumerical characters can go inside quotes(escaped in the config value)
- jwt-role-claim-key = ".\"https://www.example.com/role\".key"
+# {"https://www.example.com/role": { "key": "author" }}
+# non-alphanumerical characters can go inside quotes(escaped in the config value)
+jwt-role-claim-key = ".\"https://www.example.com/role\".key"
 
- # {"postgrest":{"roles": ["other", "author"]}}
- # `@` represents the current element in the array
- # all the these match the string "author"
- jwt-role-claim-key = ".postgrest.roles[?(@ == \"author\")]"
- jwt-role-claim-key = ".postgrest.roles[?(@ != \"other\")]"
- jwt-role-claim-key = ".postgrest.roles[?(@ ^== \"aut\")]"
- jwt-role-claim-key = ".postgrest.roles[?(@ ==^ \"hor\")]"
- jwt-role-claim-key = ".postgrest.roles[?(@ *== \"utho\")]"
+# {"postgrest":{"roles": ["other", "author"]}}
+# `@` represents the current element in the array
+# all the these match the string "author"
+jwt-role-claim-key = ".postgrest.roles[?(@ == \"author\")]"
+jwt-role-claim-key = ".postgrest.roles[?(@ != \"other\")]"
+jwt-role-claim-key = ".postgrest.roles[?(@ ^== \"aut\")]"
+jwt-role-claim-key = ".postgrest.roles[?(@ ==^ \"hor\")]"
+jwt-role-claim-key = ".postgrest.roles[?(@ *== \"utho\")]"
 
- # {"postgrest":{"wlcg": ["/groupa", "/groupb/"]}}
- # skip the "/" character using slice operator
- jwt-role-claim-key = ".postgrest.wlcg[0][1:]"
- jwt-role-claim-key = ".postgrest.wlcg[1][1:-1]"
+# {"postgrest":{"wlcg": ["/groupa", "/groupb/"]}}
+# skip the "/" character using slice operator
+jwt-role-claim-key = ".postgrest.wlcg[0][1:]"
+jwt-role-claim-key = ".postgrest.wlcg[1][1:-1]"
 ```
 
 !!! note
 
-
-The string comparison operators are implemented as a custom extension to the JSPath and does not strictly follow the [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535.html).
+    The string comparison operators are implemented as a custom extension to the JSPath and does not strictly follow the [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535.html).
 
 ## JWT Security
 
@@ -277,21 +276,38 @@ PostgREST uses JWT mainly for authentication and authorization purposes and enco
 PostgREST does not enforce any extra constraints besides JWT validation. An example of an extra constraint would be to immediately revoke access for a certain user. Using [db-pre-request](configuration.md#db-pre-request) you can specify a function to call immediately after [User Impersonation](#user_impersonation) and before the main query itself runs.
 
 ```ini
-```
-
 db-pre-request = "public.check_user"
+```
 
 In the function you can run arbitrary code to check the request and raise an exception(see [RAISE errors with HTTP Status Codes](errors.md#raise_error)) to block it if desired. Here you can take advantage of [Request Headers, Cookies and JWT claims](transactions.md#guc_req_headers_cookies_claims) for doing custom logic based on the web user info.
 
 ```postgres
+CREATE OR REPLACE FUNCTION check_user() RETURNS void AS $$
+DECLARE
+  email text := current_setting('request.jwt.claims', true)::json->>'email';
+BEGIN
+  IF email = 'evil.user@malicious.com' THEN
+    RAISE EXCEPTION 'No, you are evil'
+      USING HINT = 'Stop being so evil and maybe you can log in';
+  END IF;
+END
+$$ LANGUAGE plpgsql;
 ```
 
-CREATE OR REPLACE FUNCTION check_user() RETURNS void AS $$ DECLARE email text := current_setting('request.jwt.claims', true)::json->>'email'; BEGIN IF email = 'evil.user@malicious.com' THEN RAISE EXCEPTION 'No, you are evil' USING HINT = 'Stop being so evil and maybe you can log in'; END IF; END $$ LANGUAGE plpgsql;
+<script type="text/javascript">
+  let hash = window.location.hash;
 
-<script type="text/javascript"> let hash = window.location.hash;
+  const redirects = {
+    '#jwt-based-user-impersonation': '#jwt-authentication',
+    '#client-auth': '#bearer-authentication',
+    '#jwt-caching': '#jwt-cache',
+    '#jwk-kid-validation': '#kid-verification',
+    '#jwt-aud-claim-validation': '#aud-validation',
+  };
 
-const redirects = { '#jwt-based-user-impersonation': '#jwt-authentication', '#client-auth': '#bearer-authentication', '#jwt-caching': '#jwt-cache', '#jwk-kid-validation': '#kid-verification', '#jwt-aud-claim-validation': '#aud-validation', };
+  let willRedirectTo = redirects[hash];
 
-let willRedirectTo = redirects[hash];
-
-if (willRedirectTo) { window.location.href = willRedirectTo; } </script>
+  if (willRedirectTo) {
+    window.location.href = willRedirectTo;
+  }
+</script>

@@ -22,24 +22,30 @@ The server is able to start without any config parameters, but it won't be able 
 There is no predefined location for the config file, you must specify the file path as the one and only argument to the server:
 
 ```bash
-```
-
 ./postgrest /path/to/postgrest.conf
+```
 
 The configuration file must contain a set of key value pairs:
 
 ```
-```
-
 # postgrest.conf
 
-# The standard connection URI format, documented at # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING db-uri       = "postgres://user:pass@host:5432/dbname"
+# The standard connection URI format, documented at
+# https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+db-uri       = "postgres://user:pass@host:5432/dbname"
 
-# The database role to use when no client authentication is provided. # Should differ from authenticator db-anon-role = "anon"
+# The database role to use when no client authentication is provided.
+# Should differ from authenticator
+db-anon-role = "anon"
 
-# The secret to verify the JWT for authenticated requests with. # Needs to be 32 characters minimum. jwt-secret           = "reallyreallyreallyreallyverysafe" jwt-secret-is-base64 = false
+# The secret to verify the JWT for authenticated requests with.
+# Needs to be 32 characters minimum.
+jwt-secret           = "reallyreallyreallyreallyverysafe"
+jwt-secret-is-base64 = false
 
-# Port the postgrest process is listening on for http requests server-port = 3000
+# Port the postgrest process is listening on for http requests
+server-port = 3000
+```
 
 You can run `postgrest --example` to display all possible configuration parameters and how to use them in a configuration file.
 <a id="env_variables_config"></a>
@@ -58,8 +64,6 @@ See the full list of environment variable names on [List of parameters](#config_
 You can also configure the server with database settings by using a [pre-config](#db-pre-config) function. For example, you can configure [db-schemas](#db-schemas) and [jwt-secret](#jwt-secret) like this:
 
 ```
-```
-
 # postgrest.conf
 
 db-pre-config  = "postgrest.pre_config"
@@ -67,13 +71,22 @@ db-pre-config  = "postgrest.pre_config"
 # or env vars
 
 PGRST_DB_PRE_CONFIG = "postgrest.pre_config"
-
-```postgres
 ```
 
--- create a dedicated schema, hidden from the API create schema postgrest; -- grant usage on this schema to the authenticator grant usage on schema postgrest to authenticator;
+```postgres
+-- create a dedicated schema, hidden from the API
+create schema postgrest;
+-- grant usage on this schema to the authenticator
+grant usage on schema postgrest to authenticator;
 
--- the function can configure postgREST by using set_config create or replace function postgrest.pre_config() returns void as $$ select set_config('pgrst.db_schemas', 'schema1, schema2', true) , set_config('pgrst.jwt_secret', 'REALLYREALLYREALLYREALLYVERYSAFE', true); $$ language sql;
+-- the function can configure postgREST by using set_config
+create or replace function postgrest.pre_config()
+returns void as $$
+  select
+      set_config('pgrst.db_schemas', 'schema1, schema2', true)
+    , set_config('pgrst.jwt_secret', 'REALLYREALLYREALLYREALLYVERYSAFE', true);
+$$ language sql;
+```
 
 Note that underscores(`_`) need to be used instead of dashes(`-`) for the in-database config parameters. See the full list of in-database names on [List of parameters](#config_full_list).
 
@@ -107,9 +120,8 @@ It's possible to reload PostgREST's configuration without restarting the server.
 To reload the configuration via signal, send a SIGUSR2 signal to the server process.
 
 ```bash
-```
-
 killall -SIGUSR2 postgrest
+```
 <a id="config_reloading_notify"></a>
 
 ### Configuration Reload with NOTIFY
@@ -156,11 +168,11 @@ The [current_setting` function has `an optional boolean second](https://www.post
 Specifies the verbosity of PostgREST errors. See [Client Error Verbosity](errors.md#client_error_verbosity).
 
 ```bash
- # Return error "code", "message", "details" and "hint"
- client-error-verbosity = "verbose"
+# Return error "code", "message", "details" and "hint"
+client-error-verbosity = "verbose"
 
- # Return only "code" and "message"
- client-error-verbosity = "minimal"
+# Return only "code" and "message"
+client-error-verbosity = "minimal"
 ```
 
 !!! note
@@ -234,8 +246,7 @@ Multiple schemas can be added in a comma-separated string, e.g. `public, extensi
 
 !!! important
 
-
-We default this config to `public` because it is the most common schema used to install PostgreSQL extensions such as [PostGIS](../how-tos/working-with-postgresql-data-types.md#ww_postgis). You can disable this by setting this config to `""`.
+    We default this config to `public` because it is the most common schema used to install PostgreSQL extensions such as [PostGIS](../how-tos/working-with-postgresql-data-types.md#ww_postgis). You can disable this by setting this config to `""`.
 <a id="db-hoisted-tx-settings"></a>
 
 ### db-hoisted-tx-settings
@@ -343,17 +354,17 @@ The list of database schemas to expose to clients. See [Schemas](../api/referenc
 Specifies how to terminate the database transactions. See [Transaction End Preference](../api/references/api/preferences.md#prefer_tx).
 
 ```bash
- # The transaction is always committed
- db-tx-end = "commit"
+# The transaction is always committed
+db-tx-end = "commit"
 
- # The transaction is committed unless a "Prefer: tx=rollback" header is sent
- db-tx-end = "commit-allow-override"
+# The transaction is committed unless a "Prefer: tx=rollback" header is sent
+db-tx-end = "commit-allow-override"
 
- # The transaction is always rolled back
- db-tx-end = "rollback"
+# The transaction is always rolled back
+db-tx-end = "rollback"
 
- # The transaction is rolled back unless a "Prefer: tx=commit" header is sent
- db-tx-end = "rollback-allow-override"
+# The transaction is rolled back unless a "Prefer: tx=commit" header is sent
+db-tx-end = "rollback-allow-override"
 ```
 <a id="db-uri"></a>
 
@@ -366,7 +377,7 @@ The standard [PostgreSQL connection string](https://www.postgresql.org/docs/curr
 #### URI Format
 
 ```
- "postgres://authenticator:mysecretpassword@localhost:5433/postgres?parameters=val"
+"postgres://authenticator:mysecretpassword@localhost:5433/postgres?parameters=val"
 ```
 
 - Under this format symbols and unusual characters in the password or other fields should be percent encoded to avoid a parse error.
@@ -380,13 +391,13 @@ The standard [PostgreSQL connection string](https://www.postgresql.org/docs/curr
 #### Keyword/Value Format
 
 ```
- "host=localhost port=5433 user=authenticator password=mysecretpassword dbname=postgres"
+"host=localhost port=5433 user=authenticator password=mysecretpassword dbname=postgres"
 ```
 
 #### LIBPQ Environment Variables
 
 ```
- PGHOST=localhost PGPORT=5433 PGUSER=authenticator PGDATABASE=postgres
+PGHOST=localhost PGPORT=5433 PGUSER=authenticator PGDATABASE=postgres
 ```
 
 Any parameter that is not set in the above formats is read from [libpq environment variables](https://www.postgresql.org/docs/current/libpq-envars.html). The default connection string is `postgresql://`, which reads **all** parameters from the environment.
@@ -446,21 +457,21 @@ Maximum number of entries in JWT cache. The value `0` disables JWT caching. See 
 Specifies the level of information to be logged while running PostgREST.
 
 ```bash
-   # Only startup and db connection recovery messages are logged
-   log-level = "crit"
+ # Only startup and db connection recovery messages are logged
+ log-level = "crit"
 
-   # All the "crit" level events plus server errors (status 5xx) are logged
-   log-level = "error"
+ # All the "crit" level events plus server errors (status 5xx) are logged
+ log-level = "error"
 
-   # All the "error" level events plus request errors (status 4xx) are logged
-   log-level = "warn"
+ # All the "error" level events plus request errors (status 4xx) are logged
+ log-level = "warn"
 
-   # All the "warn" level events plus all requests (every status code) are logged
-   log-level = "info"
+ # All the "warn" level events plus all requests (every status code) are logged
+ log-level = "info"
 
-   # All the above plus events for development purposes are logged
-   # Logs connection pool events and the schema cache parsing time
-   log-level = "debug"
+ # All the above plus events for development purposes are logged
+ # Logs connection pool events and the schema cache parsing time
+ log-level = "debug"
 ```
 
 Because currently there's no buffering for logging, the levels with minimal logging(`crit/error`) will increase throughput.
@@ -480,17 +491,17 @@ Logs the SQL query for the corresponding request at the current [log-level](#log
 Specifies how the OpenAPI output should be displayed.
 
 ```bash
- # Follows the privileges of the JWT role claim (or from db-anon-role if the JWT is not sent)
- # Shows information depending on the permissions that the role making the request has
- openapi-mode = "follow-privileges"
+# Follows the privileges of the JWT role claim (or from db-anon-role if the JWT is not sent)
+# Shows information depending on the permissions that the role making the request has
+openapi-mode = "follow-privileges"
 
- # Ignores the privileges of the JWT role claim (or from db-anon-role if the JWT is not sent)
- # Shows all the exposed information, regardless of the permissions that the role making the request has
- openapi-mode = "ignore-privileges"
+# Ignores the privileges of the JWT role claim (or from db-anon-role if the JWT is not sent)
+# Shows all the exposed information, regardless of the permissions that the role making the request has
+openapi-mode = "ignore-privileges"
 
- # Disables the OpenApi output altogether.
- # Throws a `404 Not Found` error when accessing the API root path
- openapi-mode = "disabled"
+# Disables the OpenApi output altogether.
+# Throws a `404 Not Found` error when accessing the API root path
+openapi-mode = "disabled"
 ```
 <a id="openapi-security-active"></a>
 
@@ -508,19 +519,19 @@ When this is set to `true`, security options are included in the [OpenAPI output
 Overrides the base URL used within the OpenAPI self-documentation hosted at the API root path. Use a complete URI syntax `scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]`. Ex. `https://postgrest.com`
 
 ```json
- {
-   "swagger": "2.0",
-   "info": {
-     "version": "0.4.3.0",
-     "title": "PostgREST API",
-     "description": "This is a dynamic API generated by PostgREST"
-   },
-   "host": "postgrest.com:443",
-   "basePath": "/",
-   "schemes": [
-     "https"
-   ]
- }
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "0.4.3.0",
+    "title": "PostgREST API",
+    "description": "This is a dynamic API generated by PostgREST"
+  },
+  "host": "postgrest.com:443",
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ]
+}
 ```
 <a id="server_cors_allowed_origins"></a>
 
@@ -552,7 +563,7 @@ Where to bind the PostgREST web server. In addition to the usual address options
 Examples:
 
 ```bash
- server-host = "127.0.0.1"
+server-host = "127.0.0.1"
 ```
 <a id="server-port"></a>
 
@@ -584,7 +595,7 @@ Enables the [Server-Timing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Re
 [Unix domain socket](https://en.wikipedia.org/wiki/Unix_domain_socket) where to bind the PostgREST web server. If specified, this takes precedence over [server-port](#server-port). Example:
 
 ```bash
- server-unix-socket = "/tmp/pgrst.sock"
+server-unix-socket = "/tmp/pgrst.sock"
 ```
 <a id="server-unix-socket-mode"></a>
 
@@ -595,5 +606,5 @@ Enables the [Server-Timing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Re
 [Unix file mode](https://en.wikipedia.org/wiki/File_system_permissions) to be set for the socket specified in [server-unix-socket](#server-unix-socket) Needs to be a valid octal between 600 and 777.
 
 ```bash
- server-unix-socket-mode = "660"
+server-unix-socket-mode = "660"
 ```
