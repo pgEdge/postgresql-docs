@@ -2463,15 +2463,10 @@ func TestHandleImagedataMissingSrc(t *testing.T) {
 		t.Fatalf("handleImagedata should not error: %v", err)
 	}
 
-	// Should have a warning about missing source
-	found := false
-	for _, warn := range ctx.Warnings {
-		if strings.Contains(warn, "could not read image") {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("expected warning about missing image")
+	// Missing source image should produce no output (silently skipped)
+	if strings.Contains(w.String(), "![image]") {
+		t.Errorf("expected no image output for missing source:\n%s",
+			w.String())
 	}
 }
 

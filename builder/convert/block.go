@@ -374,30 +374,34 @@ func handleImagedata(ctx *Context, node *sgml.Node, w *MarkdownWriter) error {
 		return nil
 	}
 
-	w.BlankLine()
-	w.WriteString(fmt.Sprintf("![image](%s)\n", fileref))
-
 	// Copy image file to output directory alongside the current .md file
 	if ctx != nil && ctx.SrcDir != "" && ctx.OutDir != "" && ctx.CurrentFile != "" {
 		srcPath := filepath.Join(ctx.SrcDir, fileref)
-		outDir := filepath.Dir(filepath.Join(ctx.OutDir, ctx.CurrentFile))
-		dstPath := filepath.Join(outDir, fileref)
 
-		// Create destination directory
-		if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
-			ctx.Warn("could not create image dir: %v", err)
+		// Only emit the image reference if the source file exists
+		data, err := os.ReadFile(srcPath)
+		if err != nil {
+			// Source image missing (e.g., build-generated) — skip
 			return nil
 		}
 
-		// Copy the file
-		data, err := os.ReadFile(srcPath)
-		if err != nil {
-			ctx.Warn("could not read image %s: %v", srcPath, err)
+		w.BlankLine()
+		w.WriteString(fmt.Sprintf("![image](%s)\n", fileref))
+
+		outDir := filepath.Dir(filepath.Join(ctx.OutDir, ctx.CurrentFile))
+		dstPath := filepath.Join(outDir, fileref)
+
+		if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+			ctx.Warn("could not create image dir: %v", err)
 			return nil
 		}
 		if err := os.WriteFile(dstPath, data, 0644); err != nil {
 			ctx.Warn("could not write image %s: %v", dstPath, err)
 		}
+	} else {
+		// No context for file operations — emit reference anyway
+		w.BlankLine()
+		w.WriteString(fmt.Sprintf("![image](%s)\n", fileref))
 	}
 
 	return nil
