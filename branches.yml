@@ -112,6 +112,7 @@ branches:
     upstream: https://github.com/psycopg/psycopg2.git
     ref: "2_9_10"
     src_subdir: doc/src
+    skip_sections: "Contents"
 
   - branch: psycopg2master
     mode: rst
@@ -119,3 +120,4 @@ branches:
     upstream: https://github.com/psycopg/psycopg2.git
     ref: master
     src_subdir: doc/src
+    skip_sections: "Contents"

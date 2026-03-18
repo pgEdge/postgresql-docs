@@ -735,11 +735,15 @@ func handleAPIDef(
 }
 
 // handleRubric converts a rubric directive to a bold heading.
+// Rubrics whose text matches a SkipSections entry are suppressed.
 func handleRubric(
 	ctx *ConvertContext,
 	node *Node,
 	w *shared.MarkdownWriter,
 ) error {
+	if ctx.shouldSkipSection(node.DirectiveArg) {
+		return nil
+	}
 	w.BlankLine()
 	w.WriteString("**" + convertInlineCtx(ctx, node.DirectiveArg) + "**\n")
 	return nil
