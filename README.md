@@ -171,7 +171,7 @@ pgdoc-converter [flags]
 - [ ] PostGIS (3.5.3–3.5.5)
 - [ ] pgvector (0.8.0–0.8.1)
 - [ ] pgAudit (16.1–18.0)
-- [ ] psycopg2 (2.9.10)
+- [x] psycopg2 (2.9.10)
 - [x] PostgREST (14.5)
 
 ## Project Structure
