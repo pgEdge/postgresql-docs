@@ -38,18 +38,20 @@ Only the selected schema gets added to the [search_path](https://www.postgresql.
 For GET or HEAD, select the schema with `Accept-Profile`.
 
 ```bash
+curl "http://localhost:3000/items" \
+  -H "Accept-Profile: tenant2"
 ```
-
-curl "http://localhost:3000/items"  -H "Accept-Profile: tenant2"
 
 ### Other methods
 
 For POST, PATCH, PUT and DELETE, select the schema with `Content-Profile`.
 
 ```bash
+curl "http://localhost:3000/items" \
+  -X POST -H "Content-Type: application/json" \
+  -H "Content-Profile: tenant2" \
+  -d '{...}'
 ```
-
-curl "http://localhost:3000/items"  -X POST -H "Content-Type: application/json"  -H "Content-Profile: tenant2"  -d '{...}'
 
 You can also select the schema for [Functions as RPC](functions.md#functions) and [OpenAPI](openapi.md#open-api).
 
@@ -58,14 +60,18 @@ You can also select the schema for [Functions as RPC](functions.md#functions) an
 You can only switch to a schema included in [db-schemas](../../../references/configuration.md#db-schemas). Using another schema will result in an error:
 
 ```bash
+curl "http://localhost:3000/items" \
+  -H "Accept-Profile: tenant3"
 ```
 
-curl "http://localhost:3000/items"  -H "Accept-Profile: tenant3"
-
 ```
+{
+  "code":"PGRST106",
+  "details":null,
+  "hint":null,
+  "message":"The schema must be one of the following: tenant1, tenant2"
+}
 ```
-
-{ "code":"PGRST106", "details":null, "hint":null, "message":"The schema must be one of the following: tenant1, tenant2" }
 
 ### Dynamic schemas
 
@@ -74,25 +80,39 @@ To add schemas dynamically, you can use [In-Database Configuration](../../../ref
 - If the schemas' names have a pattern, like a `tenant_` prefix, do:
 
 ```postgres
+create or replace function postgrest.pre_config()
+returns void as $$
+  select
+    set_config('pgrst.db_schemas', string_agg(nspname, ','), true)
+  from pg_namespace
+  where nspname like 'tenant_%';
+$$ language sql;
 ```
-
-create or replace function postgrest.pre_config() returns void as $$ select set_config('pgrst.db_schemas', string_agg(nspname, ','), true) from pg_namespace where nspname like 'tenant_%'; $$ language sql;
 
 - If there's no name pattern but they're created with a particular role (`CREATE SCHEMA mine AUTHORIZATION joe`), do:
 
 ```postgres
+create or replace function postgrest.pre_config()
+returns void as $$
+  select
+    set_config('pgrst.db_schemas', string_agg(nspname, ','), true)
+  from pg_namespace
+  where nspowner = 'joe'::regrole;
+$$ language sql;
 ```
-
-create or replace function postgrest.pre_config() returns void as $$ select set_config('pgrst.db_schemas', string_agg(nspname, ','), true) from pg_namespace where nspowner = 'joe'::regrole; $$ language sql;
 
 - Otherwise, you might need to create a table that stores the allowed schemas.
 
 ```postgres
-```
-
 create table postgrest.config (schemas text);
 
-create or replace function postgrest.pre_config() returns void as $$ select set_config('pgrst.db_schemas', schemas, true) from postgrest.config; $$ language sql;
+create or replace function postgrest.pre_config()
+returns void as $$
+  select
+    set_config('pgrst.db_schemas', schemas, true)
+  from postgrest.config;
+$$ language sql;
+```
 
 Then each time you add an schema, do:
 

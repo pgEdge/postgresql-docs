@@ -10,19 +10,23 @@ PostgREST error messages follow the PostgreSQL error structure. It includes `MES
 PostgREST will forward errors coming from PostgreSQL. For instance, on a failed constraint:
 
 ```http
-```
-
 POST /projects HTTP/1.1
+```
 
 ```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
 ```
-
-HTTP/1.1 400 Bad Request Content-Type: application/json; charset=utf-8
 
 ```json
-```
 
-{ "code": "23502", "details": "Failing row contains (null, foo, null).", "hint": null, "message": "null value in column "id" of relation "projects" violates not-null constraint" }
+{
+    "code": "23502",
+    "details": "Failing row contains (null, foo, null).",
+    "hint": null,
+    "message": "null value in column \"id\" of relation \"projects\" violates not-null constraint"
+}
+```
 <a id="status_codes"></a>
 
 ### HTTP Status Codes
@@ -67,19 +71,22 @@ PostgREST translates [PostgreSQL error codes](https://www.postgresql.org/docs/cu
 Errors that come from PostgREST itself maintain the same structure but differ in the `PGRST` prefix in the `code` field. For instance, when querying a function that does not exist in the schema cache:
 
 ```http
-```
-
 POST /rpc/nonexistent_function HTTP/1.1
+```
 
 ```http
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
 ```
-
-HTTP/1.1 404 Not Found Content-Type: application/json; charset=utf-8
 
 ```json
+{
+  "hint": "...",
+  "details": null
+  "code": "PGRST202",
+  "message": "Could not find the api.nonexistent_function() function in the schema cache"
+}
 ```
-
-{ "hint": "...", "details": null "code": "PGRST202", "message": "Could not find the api.nonexistent_function() function in the schema cache" }
 <a id="pgrst_errors"></a>
 
 ### PostgREST Error Codes
@@ -383,34 +390,52 @@ You can customize the errors by using the [RAISE statement](https://www.postgres
 Custom status codes can be done by raising SQL exceptions inside [functions](../api/references/api/functions.md#functions). For instance, here's a saucy function that always responds with an error:
 
 ```postgres
+CREATE OR REPLACE FUNCTION just_fail() RETURNS void
+  LANGUAGE plpgsql
+  AS $$
+BEGIN
+  RAISE EXCEPTION 'I refuse!'
+    USING DETAIL = 'Pretty simple',
+          HINT = 'There is nothing you can do.';
+END
+$$;
 ```
-
-CREATE OR REPLACE FUNCTION just_fail() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'I refuse!' USING DETAIL = 'Pretty simple', HINT = 'There is nothing you can do.'; END $$;
 
 Calling the function returns HTTP 400 with the body
 
 ```json
+{
+  "message":"I refuse!",
+  "details":"Pretty simple",
+  "hint":"There is nothing you can do.",
+  "code":"P0001"
+}
 ```
-
-{ "message":"I refuse!", "details":"Pretty simple", "hint":"There is nothing you can do.", "code":"P0001" }
 
 One way to customize the HTTP status code is by raising particular exceptions according to the PostgREST [error to status code mapping](#status_codes). For example, `RAISE insufficient_privilege` will respond with HTTP 401/403 as appropriate.
 
 For even greater control of the HTTP status code, raise an exception of the `PTxyz` type. For instance to respond with HTTP 402, raise `PT402`:
 
 ```postgres
+RAISE sqlstate 'PT402' using
+  message = 'Payment Required',
+  detail = 'Quota exceeded',
+  hint = 'Upgrade your plan';
 ```
-
-RAISE sqlstate 'PT402' using message = 'Payment Required', detail = 'Quota exceeded', hint = 'Upgrade your plan';
 
 Returns:
 
 ```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json; charset=utf-8
+
+{
+  "message": "Payment Required",
+  "details": "Quota exceeded",
+  "hint": "Upgrade your plan",
+  "code": "PT402"
+}
 ```
-
-HTTP/1.1 402 Payment Required Content-Type: application/json; charset=utf-8
-
-{ "message": "Payment Required", "details": "Quota exceeded", "hint": "Upgrade your plan", "code": "PT402" }
 <a id="raise_headers"></a>
 
 ### Add HTTP Headers with RAISE
@@ -418,25 +443,31 @@ HTTP/1.1 402 Payment Required Content-Type: application/json; charset=utf-8
 For full control over headers and status you can raise a `PGRST` SQLSTATE error. You can achieve this by adding the `code`, `message`, `detail` and `hint` in the PostgreSQL error message field as a JSON object. Here, the `details` and `hint` are optional. Similarly, the `status` and `headers` must be added to the SQL error detail field as a JSON object. For instance:
 
 ```postgres
+RAISE sqlstate 'PGRST' USING
+    message = '{"code":"123","message":"Payment Required","details":"Quota exceeded","hint":"Upgrade your plan"}',
+    detail = '{"status":402,"headers":{"X-Powered-By":"Nerd Rage"}}';
 ```
-
-RAISE sqlstate 'PGRST' USING message = '{"code":"123","message":"Payment Required","details":"Quota exceeded","hint":"Upgrade your plan"}', detail = '{"status":402,"headers":{"X-Powered-By":"Nerd Rage"}}';
 
 Returns:
 
 ```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json; charset=utf-8
+X-Powered-By: Nerd Rage
+
+{
+  "message": "Payment Required",
+  "details": "Quota exceeded",
+  "hint": "Upgrade your plan",
+  "code": "123"
+}
 ```
-
-HTTP/1.1 402 Payment Required Content-Type: application/json; charset=utf-8 X-Powered-By: Nerd Rage
-
-{ "message": "Payment Required", "details": "Quota exceeded", "hint": "Upgrade your plan", "code": "123" }
 
 For non standard HTTP status, you can optionally add `status_text` to describe the status code. For status code `419` the detail field may look like this:
 
 ```postgres
-```
-
 detail = '{"status":419,"status_text":"Page Expired","headers":{"X-Powered-By":"Nerd Rage"}}';
+```
 
 If PostgREST can't parse the JSON objects `message` and `detail`, it will throw a `PGRST121` error. See [Errors from PostgREST](#pgrst1**).
 <a id="proxy-status_header"></a>
@@ -448,13 +479,13 @@ For error cases, the standard [Proxy-Status](https://www.rfc-editor.org/rfc/rfc9
 For example, doing a request on a table with high count (say 30_000_000), we get:
 
 ```http
+HEAD /table HTTP/1.1
+Prefer: count=exact
 ```
-
-HEAD /table HTTP/1.1 Prefer: count=exact
 
 ```http
+HTTP/1.1 500 Internal Server Error
+Proxy-Status: PostgREST; error=57014
 ```
-
-HTTP/1.1 500 Internal Server Error Proxy-Status: PostgREST; error=57014
 
 The PostgreSQL error code `57014` ([ref](https://www.postgresql.org/docs/current/errcodes-appendix.html)) reveals that the error is due to a short `statement_timeout` value.

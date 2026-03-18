@@ -12,8 +12,7 @@ This how-to shows a way to return HTML content and use the [htmx library](https:
 
 !!! warning
 
-
-This is a proof of concept showing what can be achieved using both technologies. We are working on [plmustache](https://github.com/PostgREST/plmustache) which will further improve the HTML aspect of this how-to.
+    This is a proof of concept showing what can be achieved using both technologies. We are working on [plmustache](https://github.com/PostgREST/plmustache) which will further improve the HTML aspect of this how-to.
 
 ## Preparatory Configuration
 
@@ -22,25 +21,48 @@ We will make a to-do app based on the [Tutorial 0 - Get it Running](../tutorials
 To simplify things, we won't be using authentication, so grant all permissions on the `todos` table to the `web_anon` user.
 
 ```postgres
+grant all on api.todos to web_anon;
+grant usage, select on sequence api.todos_id_seq to web_anon;
 ```
-
-grant all on api.todos to web_anon; grant usage, select on sequence api.todos_id_seq to web_anon;
 
 Next, add the `text/html` as a [Media Type Handlers](../api/references/api/media_type_handlers.md#custom_media). With this, PostgREST can identify the request made by your web browser (with the `Accept: text/html` header) and return a raw HTML document file.
 
 ```postgres
-```
-
 create domain "text/html" as text;
+```
 
 ## Creating an HTML Response
 
 Let's create a function that returns a basic HTML file, using [Pico CSS](https://picocss.com) for styling and [Ionicons](https://ionic.io/ionicons) to show some icons later.
 
 ```postgres
+create or replace function api.index() returns "text/html" as $$
+  select $html$
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>PostgREST + HTMX To-Do List</title>
+      <!-- Pico CSS for CSS styling -->
+      <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" rel="stylesheet" />
+    </head>
+    <body>
+      <main class="container">
+        <article>
+          <h5 style="text-align: center;">
+            PostgREST + HTMX To-Do List
+          </h5>
+        </article>
+      </main>
+      <!-- Script for Ionicons icons -->
+      <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+      <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    </body>
+    </html>
+  $html$;
+$$ language sql;
 ```
-
-create or replace function api.index() returns "text/html" as $$ select $html$ <!DOCTYPE html> <html> <head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1"> <title>PostgREST + HTMX To-Do List</title> <!-- Pico CSS for CSS styling --> <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" rel="stylesheet" /> </head> <body> <main class="container"> <article> <h5 style="text-align: center;"> PostgREST + HTMX To-Do List </h5> </article> </main> <!-- Script for Ionicons icons --> <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script> <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script> </body> </html> $html$; $$ language sql;
 
 The web browser will open the web page at `http://localhost:3000/rpc/index`.
 
@@ -52,13 +74,32 @@ The web browser will open the web page at `http://localhost:3000/rpc/index`.
 Now, let's show a list of the to-dos already inserted in the database. For that, we'll also need a function to help us sanitize the HTML content that may be present in the task.
 
 ```postgres
+create or replace function api.sanitize_html(text) returns text as $$
+  select replace(replace(replace(replace(replace($1, '&', '&amp;'), '"', '&quot;'),'>', '&gt;'),'<', '&lt;'), '''', '&apos;')
+$$ language sql;
+
+create or replace function api.html_todo(api.todos) returns text as $$
+  select format($html$
+    <div>
+      <%2$s>
+        %3$s
+      </%2$s>
+    </div>
+    $html$,
+    $1.id,
+    case when $1.done then 's' else 'span' end,
+    api.sanitize_html($1.task)
+  );
+$$ language sql stable;
+
+create or replace function api.html_all_todos() returns text as $$
+  select coalesce(
+    string_agg(api.html_todo(t), '<hr/>' order by t.id),
+    '<p><em>There is nothing else to do.</em></p>'
+  )
+  from api.todos t;
+$$ language sql;
 ```
-
-create or replace function api.sanitize_html(text) returns text as $$ select replace(replace(replace(replace(replace($1, '&', '&amp;'), '"', '&quot;'),'>', '&gt;'),'<', '&lt;'), '''', '&apos;') $$ language sql;
-
-create or replace function api.html_todo(api.todos) returns text as $$ select format($html$ <div> <%2$s> %3$s </%2$s> </div> $html$, $1.id, case when $1.done then 's' else 'span' end, api.sanitize_html($1.task) ); $$ language sql stable;
-
-create or replace function api.html_all_todos() returns text as $$ select coalesce( string_agg(api.html_todo(t), '<hr/>' order by t.id), '<p><em>There is nothing else to do.</em></p>' ) from api.todos t; $$ language sql;
 
 These two functions are used to build the to-do list template. We won't use them as PostgREST endpoints.
 
@@ -73,11 +114,53 @@ These two functions are used to build the to-do list template. We won't use them
 Next, let's add an endpoint to register a to-do in the database and modify the `/rpc/index` page accordingly.
 
 ```postgres
+create or replace function api.add_todo(_task text) returns "text/html" as $$
+  insert into api.todos(task) values (_task);
+  select api.html_all_todos();
+$$ language sql;
+
+create or replace function api.index() returns "text/html" as $$
+  select $html$
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>PostgREST + HTMX To-Do List</title>
+      <!-- Pico CSS for CSS styling -->
+      <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" rel="stylesheet"/>
+      <!-- htmx for AJAX requests -->
+      <script src="https://unpkg.com/htmx.org"></script>
+    </head>
+    <body>
+      <main class="container"
+            style="max-width: 600px"
+            hx-headers='{"Accept": "text/html"}'>
+        <article>
+          <h5 style="text-align: center;">
+            PostgREST + HTMX To-Do List
+          </h5>
+          <form hx-post="/rpc/add_todo"
+                hx-target="#todo-list-area"
+                hx-trigger="submit"
+                hx-on="htmx:afterRequest: this.reset()">
+            <input type="text" name="_task" placeholder="Add a todo...">
+          </form>
+          <div id="todo-list-area">
+            $html$
+              || api.html_all_todos() ||
+            $html$
+          <div>
+        </article>
+      </main>
+      <!-- Script for Ionicons icons -->
+      <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+      <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    </body>
+    </html>
+  $html$;
+$$ language sql;
 ```
-
-create or replace function api.add_todo(_task text) returns "text/html" as $$ insert into api.todos(task) values (_task); select api.html_all_todos(); $$ language sql;
-
-create or replace function api.index() returns "text/html" as $$ select $html$ <!DOCTYPE html> <html> <head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1"> <title>PostgREST + HTMX To-Do List</title> <!-- Pico CSS for CSS styling --> <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css" rel="stylesheet"/> <!-- htmx for AJAX requests --> <script src="https://unpkg.com/htmx.org"></script> </head> <body> <main class="container" style="max-width: 600px" hx-headers='{"Accept": "text/html"}'> <article> <h5 style="text-align: center;"> PostgREST + HTMX To-Do List </h5> <form hx-post="/rpc/add_todo" hx-target="#todo-list-area" hx-trigger="submit" hx-on="htmx:afterRequest: this.reset()"> <input type="text" name="_task" placeholder="Add a todo..."> </form> <div id="todo-list-area"> $html$ || api.html_all_todos() || $html$ <div> </article> </main> <!-- Script for Ionicons icons --> <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script> <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script> </body> </html> $html$; $$ language sql;
 
 - The `/rpc/add_todo` endpoint allows us to add a new to-do using the `_task` parameter and returns an `html` with all the to-dos in the database.
 
@@ -103,9 +186,49 @@ With this, the `http://localhost:3000/rpc/index` page lists all the todos and ad
 Now, let's modify `api.html_todo` and make it more functional.
 
 ```postgres
+create or replace function api.html_todo(api.todos) returns text as $$
+  select format($html$
+    <div class="grid">
+      <div id="todo-edit-area-%1$s">
+        <form id="edit-task-state-%1$s"
+              hx-post="/rpc/change_todo_state"
+              hx-vals='{"_id": %1$s, "_done": %4$s}'
+              hx-target="#todo-list-area"
+              hx-trigger="click">
+          <%2$s style="cursor: pointer">
+            %3$s
+          </%2$s>
+        </form>
+      </div>
+      <div style="text-align: right">
+        <button class="outline"
+                hx-get="/rpc/html_editable_task"
+                hx-vals='{"_id": "%1$s"}'
+                hx-target="#todo-edit-area-%1$s"
+                hx-trigger="click">
+          <span>
+            <ion-icon name="create"></ion-icon>
+          </span>
+        </button>
+        <button class="outline contrast"
+                hx-post="/rpc/delete_todo"
+                hx-vals='{"_id": %1$s}'
+                hx-target="#todo-list-area"
+                hx-trigger="click">
+          <span>
+            <ion-icon name="trash" style="color: #f87171"></ion-icon>
+          </span>
+        </button>
+      </div>
+    </div>
+    $html$,
+    $1.id,
+    case when $1.done then 's' else 'span' end,
+    api.sanitize_html($1.task),
+    (not $1.done)::text
+  );
+$$ language sql stable;
 ```
-
-create or replace function api.html_todo(api.todos) returns text as $$ select format($html$ <div class="grid"> <div id="todo-edit-area-%1$s"> <form id="edit-task-state-%1$s" hx-post="/rpc/change_todo_state" hx-vals='{"_id": %1$s, "_done": %4$s}' hx-target="#todo-list-area" hx-trigger="click"> <%2$s style="cursor: pointer"> %3$s </%2$s> </form> </div> <div style="text-align: right"> <button class="outline" hx-get="/rpc/html_editable_task" hx-vals='{"_id": "%1$s"}' hx-target="#todo-edit-area-%1$s" hx-trigger="click"> <span> <ion-icon name="create"></ion-icon> </span> </button> <button class="outline contrast" hx-post="/rpc/delete_todo" hx-vals='{"_id": %1$s}' hx-target="#todo-list-area" hx-trigger="click"> <span> <ion-icon name="trash" style="color: #f87171"></ion-icon> </span> </button> </div> </div> $html$, $1.id, case when $1.done then 's' else 'span' end, api.sanitize_html($1.task), (not $1.done)::text ); $$ language sql stable;
 
 Let's deconstruct the new htmx features added:
 
@@ -136,22 +259,45 @@ Let's deconstruct the new htmx features added:
 Clicking on the first button will enable the task editing. That's why we create the `api.html_editable_task` function as an endpoint:
 
 ```postgres
+create or replace function api.html_editable_task(_id int) returns "text/html" as $$
+  select format ($html$
+  <form id="edit-task-%1$s"
+        hx-post="/rpc/change_todo_task"
+        hx-headers='{"Accept": "text/html"}'
+        hx-vals='{"_id": %1$s}'
+        hx-target="#todo-list-area"
+        hx-trigger="submit,focusout">
+    <input id="task-%1$s" type="text" name="_task" value="%2$s" autofocus>
+  </form>
+  $html$,
+    id,
+    api.sanitize_html(task)
+  )
+  from api.todos
+  where id = _id;
+$$ language sql;
 ```
-
-create or replace function api.html_editable_task(_id int) returns "text/html" as $$ select format ($html$ <form id="edit-task-%1$s" hx-post="/rpc/change_todo_task" hx-headers='{"Accept": "text/html"}' hx-vals='{"_id": %1$s}' hx-target="#todo-list-area" hx-trigger="submit,focusout"> <input id="task-%1$s" type="text" name="_task" value="%2$s" autofocus> </form> $html$, id, api.sanitize_html(task) ) from api.todos where id = _id; $$ language sql;
 
 In this example, this will return an input field that allows us to edit the corresponding to-do task.
 
 Finally, let's add the endpoints that will modify and delete the to-dos in the database.
 
 ```postgres
+create or replace function api.change_todo_state(_id int, _done boolean) returns "text/html" as $$
+  update api.todos set done = _done where id = _id;
+  select api.html_all_todos();
+$$ language sql;
+
+create or replace function api.change_todo_task(_id int, _task text) returns "text/html" as $$
+  update api.todos set task = _task where id = _id;
+  select api.html_all_todos();
+$$ language sql;
+
+create or replace function api.delete_todo(_id int) returns "text/html" as $$
+  delete from api.todos where id = _id;
+  select api.html_all_todos();
+$$ language sql;
 ```
-
-create or replace function api.change_todo_state(_id int, _done boolean) returns "text/html" as $$ update api.todos set done = _done where id = _id; select api.html_all_todos(); $$ language sql;
-
-create or replace function api.change_todo_task(_id int, _task text) returns "text/html" as $$ update api.todos set task = _task where id = _id; select api.html_all_todos(); $$ language sql;
-
-create or replace function api.delete_todo(_id int) returns "text/html" as $$ delete from api.todos where id = _id; select api.html_all_todos(); $$ language sql;
 
 All of those functions return an HTML list of to-dos that will replace the outdated one:
 

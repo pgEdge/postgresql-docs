@@ -5,9 +5,11 @@
 After [User Impersonation](auth.md#user_impersonation), every request to an API resource runs inside a transaction. The sequence of the transaction is as follows:
 
 ```postgres
+START TRANSACTION; -- <Access Mode> <Isolation Level>
+-- <Transaction-scoped settings>
+-- <Main Query>
+END; -- <Transaction End>
 ```
-
-START TRANSACTION; -- <Access Mode> <Isolation Level> -- <Transaction-scoped settings> -- <Main Query> END; -- <Transaction End>
 <a id="access_mode"></a>
 
 ## Access Mode
@@ -17,25 +19,23 @@ The access mode determines whether the transaction can modify the database or no
 Modifying the database inside READ ONLY transactions is not possible. PostgREST uses this fact to enforce HTTP semantics in GET and HEAD requests. Consider the following:
 
 ```postgres
-```
-
 CREATE SEQUENCE callcounter_count START 1;
 
-CREATE VIEW callcounter AS SELECT nextval('callcounter_count');
+CREATE VIEW callcounter AS
+SELECT nextval('callcounter_count');
+```
 
 Since the `callcounter` view modifies the sequence, calling it with GET or HEAD will result in an error:
 
 ```bash
-```
-
 curl "http://localhost:3000/callcounter"
+```
 
 ```http
-```
-
 HTTP/1.1 405 Method Not Allowed
 
 {"code":"25006","details":null,"hint":null,"message":"cannot execute nextval() in a read-only transaction"}
+```
 
 ### Access Mode on Tables and Views
 
@@ -58,10 +58,9 @@ The access mode on [Tables and Views](../api/references/api/tables_views.md#tabl
 
 !!! note
 
+    - The volatility marker is a promise about the behavior of the function.  PostgreSQL will let you mark a function that modifies the database as `IMMUTABLE` or `STABLE` without failure.  But, because of the READ ONLY transaction the function will fail under PostgREST.
 
-- The volatility marker is a promise about the behavior of the function.  PostgreSQL will let you mark a function that modifies the database as `IMMUTABLE` or `STABLE` without failure.  But, because of the READ ONLY transaction the function will fail under PostgREST.
-
-- The options_requests method doesn't start a transaction, so it's not relevant here.
+    - The options_requests method doesn't start a transaction, so it's not relevant here.
 <a id="isolation_lvl"></a>
 
 ## Isolation Level
@@ -69,18 +68,21 @@ The access mode on [Tables and Views](../api/references/api/tables_views.md#tabl
 Every transaction uses the PostgreSQL default isolation level: READ COMMITTED. Unless you modify [default_transaction_isolation](https://www.postgresql.org/docs/15/runtime-config-client.html#GUC-DEFAULT-TRANSACTION-ISOLATION)  for an impersonated role or function.
 
 ```postgres
-```
-
 ALTER ROLE webuser SET default_transaction_isolation TO 'repeatable read';
+```
 
 Every `webuser` gets its queries executed with `default_transaction_isolation` set to REPEATABLE READ.
 
 Or to change the isolation level per function call.
 
 ```postgres
+CREATE OR REPLACE FUNCTION myfunc()
+RETURNS text as $$
+  SELECT 'hello';
+$$
+LANGUAGE SQL
+SET default_transaction_isolation TO 'serializable';
 ```
-
-CREATE OR REPLACE FUNCTION myfunc() RETURNS text as $$ SELECT 'hello'; $$ LANGUAGE SQL SET default_transaction_isolation TO 'serializable';
 <a id="tx_settings"></a>
 
 ## Transaction-Scoped Settings
@@ -90,16 +92,18 @@ PostgREST uses settings tied to the transaction lifetime. These can be used to g
 You can get these with `current_setting`
 
 ```postgres
+-- request settings use the ``request.`` prefix.
+SELECT
+  current_setting('request.<setting>', true);
 ```
-
--- request settings use the `request.` prefix. SELECT current_setting('request.<setting>', true);
 
 And you can set them with `set_config`
 
 ```postgres
+-- response settings use the ``response.`` prefix.
+SELECT
+  set_config('response.<setting>', 'value1' ,true);
 ```
-
--- response settings use the `response.` prefix. SELECT set_config('response.<setting>', 'value1' ,true);
 <a id="guc_req_headers_cookies_claims"></a>
 
 ### Request Headers, Cookies and JWT claims
@@ -107,35 +111,37 @@ And you can set them with `set_config`
 PostgREST stores the headers, cookies and headers as JSON. To get them:
 
 ```postgres
+-- To get all the headers sent in the request
+SELECT current_setting('request.headers', true)::json;
+
+-- To get a single header, you can use JSON arrow operators
+SELECT current_setting('request.headers', true)::json->>'user-agent';
+
+-- value of sessionId in a cookie
+SELECT current_setting('request.cookies', true)::json->>'sessionId';
+
+-- value of the email claim in a jwt
+SELECT current_setting('request.jwt.claims', true)::json->>'email';
 ```
-
--- To get all the headers sent in the request SELECT current_setting('request.headers', true)::json;
-
--- To get a single header, you can use JSON arrow operators SELECT current_setting('request.headers', true)::json->>'user-agent';
-
--- value of sessionId in a cookie SELECT current_setting('request.cookies', true)::json->>'sessionId';
-
--- value of the email claim in a jwt SELECT current_setting('request.jwt.claims', true)::json->>'email';
 
 !!! important
 
+    - The headers names are lowercased. e.g. If the request sends `User-Agent: x` this will be obtainable as `current_setting('request.headers', true)::json->>'user-agent'`.
 
-- The headers names are lowercased. e.g. If the request sends `User-Agent: x` this will be obtainable as `current_setting('request.headers', true)::json->>'user-agent'`.
+    - The `role` in `request.jwt.claims` defaults to the value of [db-anon-role](configuration.md#db-anon-role).
 
-- The `role` in `request.jwt.claims` defaults to the value of [db-anon-role](configuration.md#db-anon-role).
+    - Settings don't become NULL after the transaction is committed, instead they're set to a an empty string `''`.
 
-- Settings don't become NULL after the transaction is committed, instead they're set to a an empty string `''`.
+    - This is considered expected behavior by PostgreSQL. For more details, see [this discussion](https://www.postgresql.org/message-id/flat/CAB_pDVVa84w7hXhzvyuMTb8f5kKV3bee_p9QTZZ58Rg7zYM7sw%40mail.gmail.com).
 
-- This is considered expected behavior by PostgreSQL. For more details, see [this discussion](https://www.postgresql.org/message-id/flat/CAB_pDVVa84w7hXhzvyuMTb8f5kKV3bee_p9QTZZ58Rg7zYM7sw%40mail.gmail.com).
+    - To avoid this inconsistency, you can create a wrapper function like:
 
-- To avoid this inconsistency, you can create a wrapper function like:
-
-```postgres
-   CREATE FUNCTION my_current_setting(text) RETURNS text
-   LANGUAGE SQL AS $$
-     SELECT nullif(current_setting($1, true), '');
-   $$;
-```
+    ```postgres
+    CREATE FUNCTION my_current_setting(text) RETURNS text
+    LANGUAGE SQL AS $$
+      SELECT nullif(current_setting($1, true), '');
+    $$;
+    ```
 <a id="guc_req_path_method"></a>
 
 ### Request Path and Method
@@ -143,24 +149,22 @@ PostgREST stores the headers, cookies and headers as JSON. To get them:
 The path and method are stored as `text`.
 
 ```postgres
-```
-
 SELECT current_setting('request.path', true);
 
 SELECT current_setting('request.method', true);
+```
 
 ### Request Role and Search Path
 
 Because of [User Impersonation](auth.md#user_impersonation), PostgREST sets the standard `role`. You can get this in different ways:
 
 ```postgres
-```
-
 SELECT current_role;
 
 SELECT current_user;
 
 SELECT current_setting('role', true);
+```
 
 Additionally it also sets the `search_path` based on [db-schemas](configuration.md#db-schemas) and [db-extra-search-path](configuration.md#db-extra-search-path).
 <a id="guc_resp_hdrs"></a>
@@ -170,23 +174,23 @@ Additionally it also sets the `search_path` based on [db-schemas](configuration.
 You can set `response.headers` to add headers to the HTTP response. For instance, this statement would add caching headers to the response:
 
 ```postgres
-```
-
 -- tell client to cache response for two days
 
-SELECT set_config('response.headers', '[{"Cache-Control": "public"}, {"Cache-Control": "max-age=259200"}]', true);
-
-```http
+SELECT set_config('response.headers',
+  '[{"Cache-Control": "public"}, {"Cache-Control": "max-age=259200"}]', true);
 ```
 
-HTTP/1.1 200 OK Content-Type: application/json; charset=utf-8 Cache-Control: no-cache, no-store, must-revalidate
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache, no-store, must-revalidate
+```
 
 Notice that the `response.headers` should be set to an *array* of single-key objects rather than a single multiple-key object. This is because headers such as `Cache-Control` or `Set-Cookie` need repeating when setting many values. An object would not allow the repeated key.
 
 !!! note
 
-
-PostgREST provided headers such as `Content-Type`, `Location`, etc. can be overriden this way. Note that irrespective of overridden `Content-Type` response header, the content will still be converted to JSON, unless you use [Media Type Handlers](../api/references/api/media_type_handlers.md#custom_media).
+    PostgREST provided headers such as `Content-Type`, `Location`, etc. can be overriden this way. Note that irrespective of overridden `Content-Type` response header, the content will still be converted to JSON, unless you use [Media Type Handlers](../api/references/api/media_type_handlers.md#custom_media).
 <a id="guc_resp_status"></a>
 
 ### Response Status Code
@@ -204,16 +208,17 @@ $$ language plpgsql;
 ```
 
 ```bash
-```
-
 curl "http://localhost:3000/rpc/teapot" -i
+```
 
 ```http
-```
-
 HTTP/1.1 418 I'm a teapot
 
-{ "message" : "The requested entity body is short and stout.", "hint" : "Tip it over and pour it out." }
+{
+  "message" : "The requested entity body is short and stout.",
+  "hint" : "Tip it over and pour it out."
+}
+```
 
 If the status code is standard, PostgREST will complete the status message(**I'm a teapot** in this example).
 <a id="impersonated_settings"></a>
@@ -225,9 +230,9 @@ PostgreSQL applies the connection role ([authenticator](auth.md#roles)) settings
 For example, consider [statement_timeout](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-STATEMENT-TIMEOUT). It allows you to abort any statement that takes more than a specified time. It is disabled by default.
 
 ```postgres
+ALTER ROLE authenticator SET statement_timeout TO '10s';
+ALTER ROLE anonymous SET statement_timeout TO '1s';
 ```
-
-ALTER ROLE authenticator SET statement_timeout TO '10s'; ALTER ROLE anonymous SET statement_timeout TO '1s';
 
 With the above settings, all users get a global statement timeout of 10 seconds and [anonymous](auth.md#roles) users get a timeout of 1 second.
 
@@ -238,18 +243,21 @@ Settings that have a context which requires privileges won't be applied by defau
 However, starting from PostgreSQL 15, you can grant privileges for these settings with:
 
 ```postgres
-```
-
 GRANT SET ON PARAMETER <setting> TO <authenticator>;
+```
 
 ### Hoisted Function Settings
 
 PostgREST can "hoist" function settings to transaction-scoped settings. This allows functions settings to override the impersonated and connection role settings.
 
 ```postgres
+CREATE OR REPLACE FUNCTION myfunc()
+RETURNS void as $$
+  SELECT pg_sleep(3); -- simulating some long-running process
+$$
+LANGUAGE SQL
+SET statement_timeout TO '4s';
 ```
-
-CREATE OR REPLACE FUNCTION myfunc() RETURNS void as $$ SELECT pg_sleep(3); -- simulating some long-running process $$ LANGUAGE SQL SET statement_timeout TO '4s';
 
 When calling the above function (see [Functions as RPC](../api/references/api/functions.md#functions)), the statement timeout will be 4 seconds.
 
@@ -302,6 +310,6 @@ end; $$ language plpgsql;
 Now when you make a GET request to a table or view, you'll get the cache headers.
 
 ```bash
+curl "http://localhost:3000/people" -i \
+ -H "User-Agent: Mozilla/4.01 (compatible; MSIE 6.0; Windows NT 5.1)"
 ```
-
-curl "http://localhost:3000/people" -i  -H "User-Agent: Mozilla/4.01 (compatible; MSIE 6.0; Windows NT 5.1)"

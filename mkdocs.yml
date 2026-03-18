@@ -51,7 +51,7 @@ extra:
 repo_url: https://github.com/pgEdge/postgresql-docs
 
 nav:
-  - Home: index.md
+  - PostgREST Documentation: index.md
   - Tutorials:
     - Tutorial 0 - Get it Running: tutorials/tut0.md
     - Tutorial 1 - The Golden Key: tutorials/tut1.md

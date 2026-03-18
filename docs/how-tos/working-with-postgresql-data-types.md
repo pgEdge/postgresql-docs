@@ -13,23 +13,43 @@ PostgREST makes use of PostgreSQL string representations to work with data types
 To handle [array types](https://www.postgresql.org/docs/current/arrays.html) you can use string representation or JSON array format.
 
 ```postgres
+create table movies (
+  id int primary key,
+  title text not null,
+  tags text[],
+  performance_times time[]
+);
 ```
-
-create table movies ( id int primary key, title text not null, tags text[], performance_times time[] );
 
 You can insert a new value using string representation.
 
 ```bash
+curl "http://localhost:3000/movies" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "id": 1,
+    "title": "Paddington",
+    "tags": "{family,comedy,not streamable}",
+    "performance_times": "{12:40,15:00,20:00}"
+  }
+EOF
 ```
-
-curl "http://localhost:3000/movies"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 1, "title": "Paddington", "tags": "{family,comedy,not streamable}", "performance_times": "{12:40,15:00,20:00}" } EOF
 
 Or you could send the same data using JSON array format:
 
 ```bash
+curl "http://localhost:3000/movies" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "id": 1,
+    "title": "Paddington",
+    "tags": ["family", "comedy", "not streamable"],
+    "performance_times": ["12:40", "15:00", "20:00"]
+  }
+EOF
 ```
-
-curl "http://localhost:3000/movies"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 1, "title": "Paddington", "tags": ["family", "comedy", "not streamable"], "performance_times": ["12:40", "15:00", "20:00"] } EOF
 
 To query the data you can use arrow operators. See [Composite / Array Columns](../api/references/api/tables_views.md#composite_array_columns).
 
@@ -38,28 +58,37 @@ To query the data you can use arrow operators. See [Composite / Array Columns](.
 Similarly to one-dimensional arrays, both the string representation and JSON array format are allowed.
 
 ```postgres
+-- This new column stores the cinema, floor and auditorium numbers in that order
+alter table movies
+add column cinema_floor_auditorium int[][][];
 ```
-
--- This new column stores the cinema, floor and auditorium numbers in that order alter table movies add column cinema_floor_auditorium int[][][];
 
 You can now update the item using JSON array format:
 
 ```bash
+curl "http://localhost:3000/movies?id=eq.1" \
+  -X PATCH -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "cinema_floor_auditorium": [ [ [1,2], [6,7] ], [ [3,5], [8,9] ] ]
+  }
+EOF
 ```
-
-curl "http://localhost:3000/movies?id=eq.1"  -X PATCH -H "Content-Type: application/json"  -d @- << EOF { "cinema_floor_auditorium": [ [ [1,2], [6,7] ], [ [3,5], [8,9] ] ] } EOF
 
 Then, for example, to query the auditoriums that are located in the first cinema (position 0 in the array) and on the second floor (position 1 in the next inner array), we can use the arrow operators this way:
 
 ```bash
-```
-
 curl "http://localhost:3000/movies?select=title,auditorium:cinema_floor_auditorium->0->1&id=eq.1"
+```
 
 ```json
+[
+  {
+    "title": "Paddington",
+    "auditorium": [6,7]
+  }
+]
 ```
-
-[ { "title": "Paddington", "auditorium": [6,7] } ]
 
 ## Bytea
 
@@ -85,23 +114,25 @@ curl "https://postgrest.org/en/latest/_images/logo.png" -o postgrest-logo.png
 Now, to send the file `postgrest-logo.png` we need to set the `Content-Type: application/octet-stream` header in the request:
 
 ```bash
+curl "http://localhost:3000/rpc/upload_binary" \
+  -X POST -H "Content-Type: application/octet-stream" \
+  --data-binary "@postgrest-logo.png"
 ```
-
-curl "http://localhost:3000/rpc/upload_binary"  -X POST -H "Content-Type: application/octet-stream"  --data-binary "@postgrest-logo.png"
 
 To get the image from the database, use [Media Type Handlers](../api/references/api/media_type_handlers.md#custom_media) like so:
 
 ```postgres
-```
-
 create domain "image/png" as bytea;
 
-create or replace get_image(id int) returns "image/png" as $$ select file from files where id = $1; $$ language sql;
-
-```bash
+create or replace get_image(id int) returns "image/png" as $$
+  select file from files where id = $1;
+$$ language sql;
 ```
 
-curl "http://localhost:3000/get_image?id=1"  -H "Accept: image/png"
+```bash
+curl "http://localhost:3000/get_image?id=1" \
+  -H "Accept: image/png"
+```
 
 See [Providing images for <img>](providing-images-for-img.md#providing_img) for a step-by-step example on how to handle images in HTML.
 
@@ -114,27 +145,49 @@ See [Providing images for <img>](providing-images-for-img.md#providing_img) for 
 With PostgREST, you have two options to handle [composite type columns](https://www.postgresql.org/docs/current/rowtypes.html).
 
 ```postgres
+create type dimension as (
+  length decimal(6,2),
+  width decimal (6,2),
+  height decimal (6,2),
+  unit text
+);
+
+create table products (
+  id int primary key,
+  size dimension
+);
+
+insert into products (id, size)
+values (1, '(5.0,5.0,10.0,"cm")');
 ```
-
-create type dimension as ( length decimal(6,2), width decimal (6,2), height decimal (6,2), unit text );
-
-create table products ( id int primary key, size dimension );
-
-insert into products (id, size) values (1, '(5.0,5.0,10.0,"cm")');
 
 On one hand you can insert values using string representation.
 
 ```bash
+curl "http://localhost:3000/products" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  { "id": 2, "size": "(0.7,0.5,1.8,\"m\")" }
+EOF
 ```
-
-curl "http://localhost:3000/products"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 2, "size": "(0.7,0.5,1.8,"m")" } EOF
 
 Or you could insert the same data in JSON format.
 
 ```bash
+curl "http://localhost:3000/products" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "id": 2,
+    "size": {
+      "length": 0.7,
+      "width": 0.5,
+      "height": 1.8,
+      "unit": "m"
+    }
+  }
+EOF
 ```
-
-curl "http://localhost:3000/products"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 2, "size": { "length": 0.7, "width": 0.5, "height": 1.8, "unit": "m" } } EOF
 
 You can also query the data using arrow operators. See [Composite / Array Columns](../api/references/api/tables_views.md#composite_array_columns).
 
@@ -143,78 +196,111 @@ You can also query the data using arrow operators. See [Composite / Array Column
 You can handle [Enumerated Types](https://www.postgresql.org/docs/current/datatype-enum.html) using string representations:
 
 ```postgres
-```
-
 create type letter_size as enum ('s','m','l','xl');
 
-create table products ( id int primary key generated always as identity, name text, size letter_size );
+create table products (
+  id int primary key generated always as identity,
+  name text,
+  size letter_size
+);
+```
 
 To insert or update the value use a string:
 
 ```bash
+curl -X POST "http://localhost:3000/products" \
+  -H "Content-Type: application/json" \
+  -d @- << EOF
+  { "name": "t-shirt", "size": "l" }
+EOF
 ```
-
-curl -X POST "http://localhost:3000/products"  -H "Content-Type: application/json"  -d @- << EOF { "name": "t-shirt", "size": "l" } EOF
 
 You can then query and filter the enum using the compatible [operators](../api/references/api/tables_views.md#operators). For example, to get all the products larger than `m` and ordering them by their size:
 
 ```bash
-```
-
 curl "http://localhost:3000/products?select=name,size&size=gt.m&order=size"
+```
 
 ```json
+[
+  {
+    "name": "t-shirt",
+    "size": "l"
+  },
+  {
+    "name": "hoodie",
+    "size": "xl"
+  }
+]
 ```
-
-[ { "name": "t-shirt", "size": "l" }, { "name": "hoodie", "size": "xl" } ]
 
 ## hstore
 
 You can work with data types belonging to additional supplied modules such as [hstore](https://www.postgresql.org/docs/current/hstore.html).
 
 ```postgres
+-- Activate the hstore module in the current database
+create extension if not exists hstore;
+
+create table countries (
+  id int primary key,
+  name hstore unique
+);
 ```
-
--- Activate the hstore module in the current database create extension if not exists hstore;
-
-create table countries ( id int primary key, name hstore unique );
 
 The `name` column will have the name of the country in different formats. You can insert values using the string representation for that data type:
 
 ```bash
+curl "http://localhost:3000/countries" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  [
+    { "id": 1, "name": "common => Egypt, official => \"Arab Republic of Egypt\", native => مصر" },
+    { "id": 2, "name": "common => Germany, official => \"Federal Republic of Germany\", native => Deutschland" }
+  ]
+EOF
 ```
-
-curl "http://localhost:3000/countries"  -X POST -H "Content-Type: application/json"  -d @- << EOF [ { "id": 1, "name": "common => Egypt, official => "Arab Republic of Egypt", native => مصر" }, { "id": 2, "name": "common => Germany, official => "Federal Republic of Germany", native => Deutschland" } ] EOF
 
 Notice that the use of `"` in the value of the `name` column needs to be escaped using a backslash `\`.
 
 You can also query and filter the value of a `hstore` column using the arrow operators, as you would do for a [JSON column](../api/references/api/tables_views.md#json_columns). For example, if you want to get the native name of Egypt:
 
 ```bash
-```
-
 curl "http://localhost:3000/countries?select=name->>native&name->>common=like.Egypt"
+```
 
 ```json
-```
-
 [{ "native": "مصر" }]
+```
 
 ## JSON
 
 To work with a `json` type column, you can handle the value as a JSON object.
 
 ```postgres
+create table products (
+  id int primary key,
+  name text unique,
+  extra_info json
+);
 ```
-
-create table products ( id int primary key, name text unique, extra_info json );
 
 You can insert a new product using a JSON object for the `extra_info` column:
 
 ```bash
+curl "http://localhost:3000/products" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "id": 1,
+    "name": "Canned fish",
+    "extra_info": {
+      "expiry_date": "2025-12-31",
+      "exportable": true
+    }
+  }
+EOF
 ```
-
-curl "http://localhost:3000/products"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 1, "name": "Canned fish", "extra_info": { "expiry_date": "2025-12-31", "exportable": true } } EOF
 
 To query and filter the data see [JSON Columns](../api/references/api/tables_views.md#json_columns) for a complete reference.
 <a id="ww_postgis"></a>
@@ -224,56 +310,135 @@ To query and filter the data see [JSON Columns](../api/references/api/tables_vie
 You can use the string representation for [PostGIS](https://postgis.net/) data types such as `geometry` or `geography` (you need to [install PostGIS](https://postgis.net/documentation/getting_started/) first).
 
 ```postgres
+-- Activate the postgis module in the current database
+create extension if not exists postgis;
+
+create table coverage (
+  id int primary key,
+  name text unique,
+  area geometry
+);
 ```
-
--- Activate the postgis module in the current database create extension if not exists postgis;
-
-create table coverage ( id int primary key, name text unique, area geometry );
 
 To add areas in polygon format, you can use string representation:
 
 ```bash
+curl "http://localhost:3000/coverage" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  [
+    { "id": 1, "name": "small", "area": "SRID=4326;POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))" },
+    { "id": 2, "name": "big", "area": "SRID=4326;POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))" }
+  ]
+EOF
 ```
-
-curl "http://localhost:3000/coverage"  -X POST -H "Content-Type: application/json"  -d @- << EOF [ { "id": 1, "name": "small", "area": "SRID=4326;POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))" }, { "id": 2, "name": "big", "area": "SRID=4326;POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))" } ] EOF
 
 Now, when you request the information, PostgREST will automatically cast the `area` column into a `Polygon` geometry type. Although this is useful, you may need the whole output to be in [GeoJSON](https://geojson.org/) format out of the box, which can be done by including the `Accept: application/geo+json` in the request. This will work for PostGIS versions 3.0.0 and up and will return the output as a [FeatureCollection Object](https://www.rfc-editor.org/rfc/rfc7946#section-3.3):
 
 ```bash
+curl "http://localhost:3000/coverage" \
+  -H "Accept: application/geo+json"
 ```
-
-curl "http://localhost:3000/coverage"  -H "Accept: application/geo+json"
 
 ```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[0,0],[1,0],[1,1],[0,1],[0,0]]
+        ]
+      },
+      "properties": {
+        "id": 1,
+        "name": "small"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[0,0],[10,0],[10,10],[0,10],[0,0]]
+        ]
+      },
+      "properties": {
+        "id": 2,
+        "name": "big"
+      }
+    }
+  ]
+}
 ```
-
-{ "type": "FeatureCollection", "features": [ { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [ [[0,0],[1,0],[1,1],[0,1],[0,0]] ] }, "properties": { "id": 1, "name": "small" } }, { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [ [[0,0],[10,0],[10,10],[0,10],[0,0]] ] }, "properties": { "id": 2, "name": "big" } } ] }
 
 If you need to add an extra property, like the area in square units by using `st_area(area)`, you could add a generated column to the table and it will appear in the `properties` key of each `Feature`.
 
 ```postgres
+alter table coverage
+  add square_units double precision generated always as ( st_area(area) ) stored;
 ```
-
-alter table coverage add square_units double precision generated always as ( st_area(area) ) stored;
 
 In the case that you are using older PostGIS versions, then creating a function is your best option:
 
 ```postgres
+create or replace function coverage_geo_collection() returns json as $$
+  select
+    json_build_object(
+      'type', 'FeatureCollection',
+      'features', json_agg(
+        json_build_object(
+          'type', 'Feature',
+          'geometry', st_AsGeoJSON(c.area)::json,
+          'properties', json_build_object('id', c.id, 'name', c.name)
+        )
+      )
+    )
+  from coverage c;
+$$ language sql;
 ```
-
-create or replace function coverage_geo_collection() returns json as $$ select json_build_object( 'type', 'FeatureCollection', 'features', json_agg( json_build_object( 'type', 'Feature', 'geometry', st_AsGeoJSON(c.area)::json, 'properties', json_build_object('id', c.id, 'name', c.name) ) ) ) from coverage c; $$ language sql;
 
 Now this query will return the same results:
 
 ```bash
-```
-
 curl "http://localhost:3000/rpc/coverage_geo_collection"
+```
 
 ```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[0,0],[1,0],[1,1],[0,1],[0,0]]
+        ]
+      },
+      "properties": {
+        "id": 1,
+        "name": "small"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[0,0],[10,0],[10,10],[0,10],[0,0]]
+        ]
+      },
+      "properties": {
+        "id": 2,
+        "name": "big"
+      }
+    }
+  ]
+}
 ```
-
-{ "type": "FeatureCollection", "features": [ { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [ [[0,0],[1,0],[1,1],[0,1],[0,0]] ] }, "properties": { "id": 1, "name": "small" } }, { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [ [[0,0],[10,0],[10,10],[0,10],[0,0]] ] }, "properties": { "id": 2, "name": "big" } } ] }
 
 ## Ranges
 
@@ -290,21 +455,32 @@ create table events (
 To insert a new event, specify the `duration` value as a string representation of the `tsrange` type:
 
 ```bash
+curl "http://localhost:3000/events" \
+  -X POST -H "Content-Type: application/json" \
+  -d @- << EOF
+  {
+    "id": 1,
+    "name": "New Year's Party",
+    "duration": "['2022-12-31 11:00','2023-01-01 06:00']"
+  }
+EOF
 ```
-
-curl "http://localhost:3000/events"  -X POST -H "Content-Type: application/json"  -d @- << EOF { "id": 1, "name": "New Year's Party", "duration": "['2022-12-31 11:00','2023-01-01 06:00']" } EOF
 
 You can use range [operators](../api/references/api/tables_views.md#operators) to filter the data. But, in this case, requesting a filter like `events?duration=cs.2023-01-01` will return an error, because PostgreSQL needs an explicit cast from string to timestamp. A workaround is to use a range starting and ending in the same date:
 
 ```bash
+curl "http://localhost:3000/events?duration=cs.\[2023-01-01,2023-01-01\]"
 ```
-
-curl "http://localhost:3000/events?duration=cs.[2023-01-01,2023-01-01]"
 
 ```json
+[
+  {
+    "id": 1,
+    "name": "New Year's Party",
+    "duration": "[\"2022-12-31 11:00:00\",\"2023-01-01 06:00:00\"]"
+  }
+]
 ```
-
-[ { "id": 1, "name": "New Year's Party", "duration": "["2022-12-31 11:00:00","2023-01-01 06:00:00"]" } ]
 <a id="casting_range_to_json"></a>
 
 ### Casting a Range to a JSON Object
@@ -331,14 +507,23 @@ create cast (tsrange as json) with function tsrange_to_json(tsrange) as assignme
 Finally, do the request [casting the range column](../api/references/api/tables_views.md#casting_columns):
 
 ```bash
-```
-
 curl "http://localhost:3000/events?select=id,name,duration::json"
+```
 
 ```json
+[
+  {
+    "id": 1,
+    "name": "New Year's Party",
+    "duration": {
+      "lower": "2022-12-31T11:00:00",
+      "upper": "2023-01-01T06:00:00",
+      "lower_inc": true,
+      "upper_inc": true
+    }
+  }
+]
 ```
-
-[ { "id": 1, "name": "New Year's Party", "duration": { "lower": "2022-12-31T11:00:00", "upper": "2023-01-01T06:00:00", "lower_inc": true, "upper_inc": true } } ]
 
 !!! note
 
@@ -358,39 +543,48 @@ curl "http://localhost:3000/events?select=id,name,duration::json"
 You can use the **time zone** to filter or send data if needed.
 
 ```postgres
+create table reports (
+  id int primary key
+  , due_date timestamptz
+);
 ```
-
-create table reports ( id int primary key , due_date timestamptz );
 
 Suppose you are located in Sydney and want create a report with the date in the local time zone. Your request should look like this:
 
 ```bash
+curl "http://localhost:3000/reports" \
+  -X POST -H "Content-Type: application/json" \
+  -d '[{ "id": 1, "due_date": "2022-02-24 11:10:15 Australia/Sydney" },{ "id": 2, "due_date": "2022-02-27 22:00:00 Australia/Sydney" }]'
 ```
-
-curl "http://localhost:3000/reports"  -X POST -H "Content-Type: application/json"  -d '[{ "id": 1, "due_date": "2022-02-24 11:10:15 Australia/Sydney" },{ "id": 2, "due_date": "2022-02-27 22:00:00 Australia/Sydney" }]'
 
 Someone located in Cairo can retrieve the data using their local time, too:
 
 ```bash
-```
-
 curl "http://localhost:3000/reports?due_date=eq.2022-02-24+02:10:15+Africa/Cairo"
+```
 
 ```json
+[
+  {
+    "id": 1,
+    "due_date": "2022-02-23T19:10:15-05:00"
+  }
+]
 ```
-
-[ { "id": 1, "due_date": "2022-02-23T19:10:15-05:00" } ]
 
 The response has the date in the time zone configured by the server: `UTC -05:00` (see [Timezone](../api/references/api/preferences.md#prefer_timezone)).
 
 You can use other comparative filters and also all the [PostgreSQL special date/time input values](https://www.postgresql.org/docs/current/datatype-datetime.html#DATATYPE-DATETIME-SPECIAL-TABLE) as illustrated in this example:
 
 ```bash
-```
-
 curl "http://localhost:3000/reports?or=(and(due_date.gte.today,due_date.lte.tomorrow),and(due_date.gt.-infinity,due_date.lte.epoch))"
+```
 
 ```json
+[
+  {
+    "id": 2,
+    "due_date": "2022-02-27T06:00:00-05:00"
+  }
+]
 ```
-
-[ { "id": 2, "due_date": "2022-02-27T06:00:00-05:00" } ]

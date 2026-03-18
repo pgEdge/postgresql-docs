@@ -6,7 +6,9 @@ This page describes the architecture of PostgREST.
 
 You can click on the components to navigate to their respective documentation.
 
-<object width="100%" data="../_static/arch.svg" type="image/svg+xml"></object>
+![image](../_static/arch-dark.svg#only-dark)
+
+![image](../_static/arch.svg#only-light)
 
 ## Code Map
 

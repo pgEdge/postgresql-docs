@@ -6,4 +6,6 @@ A PostgREST instance exposes all the tables, views, and functions of a single [P
 
 It is recommended that you don't expose tables on your API schema. Instead expose views and functions which insulate the internal details from the outside world. This allows you to change the internals of your schema and maintain backwards compatibility. It also keeps your code easier to refactor, and provides a natural way to do API versioning.
 
-<object width="100%" data="../_static/sch-iso.svg" type="image/svg+xml"></object>
+![image](../_static/sch-iso-dark.svg#only-dark)
+
+![image](../_static/sch-iso.svg#only-light)
