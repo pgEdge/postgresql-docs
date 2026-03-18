@@ -34,7 +34,7 @@ Before using AI Reports, you must:
 
 To configure AI Reports, navigate to *File → Preferences → AI* (or click the *Settings* button and select *AI*).
 
-![AI preferences](../images/preferences_ai.png)
+![AI preferences](images/preferences_ai.png)
 
 Select your preferred LLM provider from the dropdown:
 
@@ -42,7 +42,7 @@ Select your preferred LLM provider from the dropdown:
 
 - **API URL**: Custom API endpoint URL (leave empty for default: https://api.anthropic.com/v1).
 
-- **API Key File**: Path to a file containing your Anthropic API key (obtain from https://console.anthropic.com/). Optional when using a custom URL with a provider that does not require authentication.
+- **API Key File**: Path to a file containing your Anthropic API key (obtain from https://console.anthropic.com/). This path refers to the filesystem where the pgAdmin server is running (e.g., inside the container if using Docker). The `~` prefix is expanded to the home directory of the user running the pgAdmin server process. Optional when using a custom URL with a provider that does not require authentication.
 
 - **Model**: Select from available Claude models (e.g., claude-sonnet-4-20250514).
 
@@ -50,7 +50,7 @@ Select your preferred LLM provider from the dropdown:
 
 - **API URL**: Custom API endpoint URL (leave empty for default: https://api.openai.com/v1). Include the `/v1` path prefix if required by your provider.
 
-- **API Key File**: Path to a file containing your OpenAI API key (obtain from https://platform.openai.com/). Optional when using a custom URL with a provider that does not require authentication.
+- **API Key File**: Path to a file containing your OpenAI API key (obtain from https://platform.openai.com/). This path refers to the filesystem where the pgAdmin server is running (e.g., inside the container if using Docker). The `~` prefix is expanded to the home directory of the user running the pgAdmin server process. Optional when using a custom URL with a provider that does not require authentication.
 
 - **Model**: Select from available GPT models (e.g., gpt-4).
 
@@ -85,7 +85,7 @@ To generate a security report:
 
 3. The report will be generated and displayed in a new tab.
 
-![AI security report](../images/ai_security_report.png)
+![AI security report](images/ai_security_report.png)
 
 **Security Report Scope:**
 

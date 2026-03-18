@@ -6,7 +6,7 @@ Use options in the *Preferences* tab to customize the behavior of the client. To
 
 # Header
 
-![Preferences browser display options](../images/preferences_header.png)
+![Preferences browser display options](images/preferences_header.png)
 
 - Use the *Save* button to save any preference changes.
 
@@ -23,7 +23,7 @@ The left pane of the *Preferences* tab displays a tree control; each node of the
 
 Use preferences found in the *AI* node of the tree control to configure AI-powered features and LLM (Large Language Model) providers.
 
-![Preferences AI section](../images/preferences_ai.png)
+![Preferences AI section](images/preferences_ai.png)
 
 **Note:** AI features must be enabled in the server configuration (`LLM_ENABLED = True` in `config.py`) for these preferences to be available.
 
@@ -39,7 +39,10 @@ Use the fields on the *AI* panel to configure your LLM provider:
     to use an Anthropic-compatible API provider.
 
 - Use the *API Key File* field to specify the path to a file containing your
-    Anthropic API key. The API key may be optional when using a custom API URL
+    Anthropic API key. This path refers to the filesystem where the pgAdmin
+    server is running (e.g., inside the container if using Docker). The `~`
+    prefix is expanded to the home directory of the user running the pgAdmin
+    server process. The API key may be optional when using a custom API URL
     with a provider that does not require authentication.
 
 - Use the *Model* field to select from the available Claude models. Click the
@@ -55,7 +58,10 @@ Use the fields on the *AI* panel to configure your LLM provider:
     (e.g., `http://localhost:1234/v1`).
 
 - Use the *API Key File* field to specify the path to a file containing your
-    OpenAI API key. The API key may be optional when using a custom API URL
+    OpenAI API key. This path refers to the filesystem where the pgAdmin
+    server is running (e.g., inside the container if using Docker). The `~`
+    prefix is expanded to the home directory of the user running the pgAdmin
+    server process. The API key may be optional when using a custom API URL
     with a provider that does not require authentication.
 
 - Use the *Model* field to select from the available GPT models. Click the
@@ -88,7 +94,7 @@ Use the fields on the *AI* panel to configure your LLM provider:
 
 Use preferences found in the *Browser* node of the tree control to personalize your workspace.
 
-![Preferences browser display options](../images/preferences_browser_display.png)
+![Preferences browser display options](images/preferences_browser_display.png)
 
 Use the fields on the *Display* panel to specify general display preferences:
 
@@ -128,7 +134,7 @@ Use the fields on the *Display* panel to specify general display preferences:
 
 Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the main window navigation:
 
-![Preferences browser keyboard shortcuts section](../images/preferences_browser_keyboard_shortcuts.png)
+![Preferences browser keyboard shortcuts section](images/preferences_browser_keyboard_shortcuts.png)
 
 - The panel displays a list of keyboard shortcuts available for the main window;
     select the combination of the modifier keys along with the key to configure
@@ -136,7 +142,7 @@ Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the 
 
 Use the fields on the *Nodes* panel to select the object types that will be displayed in the *Browser* tree control:
 
-![Preferences browser nodes section](../images/preferences_browser_nodes.png)
+![Preferences browser nodes section](images/preferences_browser_nodes.png)
 
 - The panel displays a list of database objects; slide the switch located next
     to each object to *Show* or *Hide* the database object. When querying system
@@ -145,7 +151,7 @@ Use the fields on the *Nodes* panel to select the object types that will be disp
 
 Use the fields on the *Object Breadcrumbs* panel to change object breadcrumbs related settings:
 
-![Preferences object breadcrumbs section](../images/preferences_browser_breadcrumbs.png)
+![Preferences object breadcrumbs section](images/preferences_browser_breadcrumbs.png)
 
 - Use *Enable object breadcrumbs?* to enable or disable object breadcrumbs
     displayed on object mouse hover.
@@ -155,14 +161,14 @@ Use the fields on the *Object Breadcrumbs* panel to change object breadcrumbs re
 
 Use the fields on the *Processes* panel to change processes tab related settings:
 
-![Preferences processes section](../images/preferences_browser_processes.png)
+![Preferences processes section](images/preferences_browser_processes.png)
 
 - Change *Process details/logs retention days* to the number of days,
     the process info and logs will be automatically cleared.
 
 Use fields on the *Properties* panel to specify browser properties:
 
-![Preferences browser properties section](../images/preferences_browser_properties.png)
+![Preferences browser properties section](images/preferences_browser_properties.png)
 
 - Include a value in the *Count rows if estimated less than* field to perform a
     SELECT count(*) if the estimated number of rows in a table (as read from the
@@ -174,7 +180,7 @@ Use fields on the *Properties* panel to specify browser properties:
 
 Use field on *Tab settings* panel to specify the tab related properties.
 
-![Preferences browser properties section](../images/preferences_browser_tab_settings.png)
+![Preferences browser properties section](images/preferences_browser_tab_settings.png)
 
 - Use *Debugger tab title placeholder* field to customize the Debugger tab title.
 
@@ -193,7 +199,7 @@ Use field on *Tab settings* panel to specify the tab related properties.
 
 Expand the *Dashboards* node to specify your dashboard display preferences.
 
-![Preferences dashboard display options](../images/preferences_dashboard_display.png)
+![Preferences dashboard display options](images/preferences_dashboard_display.png)
 
 - Set the warning and alert threshold value to highlight the long-running
     queries on the dashboard.
@@ -204,7 +210,7 @@ Expand the *Dashboards* node to specify your dashboard display preferences.
 - When the *Show graphs?* switch is set to *True*, graphs will be displayed on
     dashboards.
 
-![Preferences dashboard refresh options](../images/preferences_dashboard_refresh.png)
+![Preferences dashboard refresh options](images/preferences_dashboard_refresh.png)
 
 Use the fields on the *Refresh rates* panel to specify your refresh rate preferences for the graphs on the *Dashboard* tab:
 
@@ -257,7 +263,7 @@ Expand the *Debugger* node to specify your debugger display preferences.
 
 Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the debugger window navigation:
 
-![Preferences debugger keyboard shortcuts section](../images/preferences_debugger_keyboard_shortcuts.png)
+![Preferences debugger keyboard shortcuts section](images/preferences_debugger_keyboard_shortcuts.png)
 
 # The ERD Tool Node
 
@@ -265,11 +271,11 @@ Expand the *ERD Tool* node to specify your ERD Tool display preferences.
 
 Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the ERD Tool window navigation:
 
-![Preferences erd keyboard shortcuts section](../images/preferences_erd_keyboard_shortcuts.png)
+![Preferences erd keyboard shortcuts section](images/preferences_erd_keyboard_shortcuts.png)
 
 Use the fields on the *Options* panel to manage ERD preferences.
 
-![Preferences erd options section](../images/preferences_erd_options.png)
+![Preferences erd options section](images/preferences_erd_options.png)
 
 - Use *Cardinality Notation* to change the cardinality notation format
     used to present relationship links.
@@ -292,11 +298,11 @@ Use the fields on the *Options* panel to manage ERD preferences.
 
 Expand the *Editor* node to access panels that allow you to specify your preferences for the editor across pgAdmin 4
 
-![Preferences editor keyboard shortcuts section](../images/preferences_editor_keyboard_shortcuts.png)
+![Preferences editor keyboard shortcuts section](images/preferences_editor_keyboard_shortcuts.png)
 
 Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the editor.
 
-![Preferences editor options section](../images/preferences_editor_options.png)
+![Preferences editor options section](images/preferences_editor_options.png)
 
 Use the fields on the *Options* panel to manage editor preferences.
 
@@ -337,7 +343,7 @@ Use the fields on the *Options* panel to manage editor preferences.
     changed to text/plain. Keyword highlighting and code folding will be disabled.
     This will improve editor performance with large files.
 
-![Preferences SQL Formatting section](../images/preferences_editor_sql_formatting.png)
+![Preferences SQL Formatting section](images/preferences_editor_sql_formatting.png)
 
 Use the fields on the *SQL formatting* panel to specify your preferences for reformatting of SQL.
 
@@ -377,7 +383,7 @@ Use the fields on the *SQL formatting* panel to specify your preferences for ref
 
 Expand the *Graphs* node to specify your Graphs display preferences.
 
-![Preferences dashboard graph options](../images/preferences_dashboard_graphs.png)
+![Preferences dashboard graph options](images/preferences_dashboard_graphs.png)
 
 - Use the *Chart line width* field to specify the width of the lines on the
     line chart.
@@ -395,7 +401,7 @@ Expand the *Graphs* node to specify your Graphs display preferences.
 
 Expand the *Miscellaneous* node to specify miscellaneous display preferences.
 
-![Preferences file downloads section](../images/preferences_misc_file_downloads.png)
+![Preferences file downloads section](images/preferences_misc_file_downloads.png)
 
 Use the fields on the *File Downloads* panel to manage file downloads related preferences.
 
@@ -417,7 +423,7 @@ Use the fields on the *File Downloads* panel to manage file downloads related pr
 
 Use the fields on the *User Interface* panel to set the user interface related preferences.
 
-![Preferences user interface section](../images/preferences_misc_user_interface.png)
+![Preferences user interface section](images/preferences_misc_user_interface.png)
 
 - Use the *Language* drop-down listbox to select the display language for
     the client.
@@ -450,7 +456,7 @@ Use the fields on the *User Interface* panel to set the user interface related p
 
 Expand the *Paths* node to specify the locations of supporting utility and help files.
 
-![Preferences binary path section](../images/preferences_paths_binary.png)
+![Preferences binary path section](images/preferences_paths_binary.png)
 
 Use the fields on the *Binary paths* panel to specify the path to the directory that contains the utility programs (pg_dump, pg_dumpall, pg_restore and psql) for monitored databases:
 
@@ -468,7 +474,7 @@ Use the fields on the *Binary paths* panel to specify the path to the directory 
 
 **Note:** Use the 'Validate path' button to check the existence of the utility programs (pg_dump, pg_dumpall, pg_restore and psql) and their respective versions.
 
-![Preferences binary path help section](../images/preferences_paths_help.png)
+![Preferences binary path help section](images/preferences_paths_help.png)
 
 Use the fields on the *Help* panel to specify the location of help files.
 
@@ -481,7 +487,7 @@ Please note: the default help paths include the *VERSION* placeholder; the $VERS
 
 Expand the *Query Tool* node to access panels that allow you to specify your preferences for the Query Editor tool.
 
-![Preferences sqleditor auto completion option](../images/preferences_sql_auto_completion.png)
+![Preferences sqleditor auto completion option](images/preferences_sql_auto_completion.png)
 
 Use the fields on the *Auto Completion* panel to set the auto completion options.
 
@@ -492,7 +498,7 @@ Use the fields on the *Auto Completion* panel to set the auto completion options
 - When the *Keywords in uppercase* switch is set to *True* then keywords are
     shown in upper case.
 
-![Preferences sqleditor csv output option](../images/preferences_sql_csv_output.png)
+![Preferences sqleditor csv output option](images/preferences_sql_csv_output.png)
 
 Use the fields on the *CSV/TXT Output* panel to control the CSV/TXT output.
 
@@ -508,7 +514,7 @@ Use the fields on the *CSV/TXT Output* panel to control the CSV/TXT output.
 - Use the *Replace null values with* option to replace null values with
     specified string in the output file. Default is set to 'NULL'.
 
-![Preferences sqleditor display options](../images/preferences_sql_display.png)
+![Preferences sqleditor display options](images/preferences_sql_display.png)
 
 Use the fields on the *Display* panel to specify your preferences for the Query Tool display.
 
@@ -521,7 +527,7 @@ Use the fields on the *Display* panel to specify your preferences for the Query 
 - When the *Show query success notification?* switch is set to *True*, the Query Tool
     will show notifications on successful query execution.
 
-![Preferences sqleditor explain options](../images/preferences_sql_explain.png)
+![Preferences sqleditor explain options](images/preferences_sql_explain.png)
 
 Use the fields on the *Explain* panel to specify the level of detail included in a graphical EXPLAIN.
 
@@ -547,14 +553,14 @@ Use the fields on the *Explain* panel to specify the level of detail included in
 - When the *Verbose output?* switch is set to *True*, graphical explain details
     will include extended information about the query execution plan.
 
-![Preferences sqleditor graph visualiser section](../images/preferences_graph_visualiser.png)
+![Preferences sqleditor graph visualiser section](images/preferences_graph_visualiser.png)
 
 Use the fields on the *Graph Visualiser* panel to specify the settings related to graphs.
 
 - Use the *Row Limit* field to specify the maximum number of rows that will
     be plotted on a chart.
 
-![Preferences sqleditor options section](../images/preferences_sql_options.png)
+![Preferences sqleditor options section](images/preferences_sql_options.png)
 
 Use the fields on the *Options* panel to manage editor preferences.
 
@@ -601,7 +607,7 @@ Use the fields on the *Options* panel to manage editor preferences.
 - When the *Use server cursor?* switch is set to *True*, the dataset will be fetched
     using a server-side cursor after the query is executed.
 
-![Preferences sql results grid section](../images/preferences_sql_results_grid.png)
+![Preferences sql results grid section](images/preferences_sql_results_grid.png)
 
 Use the fields on the *Results grid* panel to specify your formatting preferences for copied data.
 
@@ -634,7 +640,7 @@ Use the fields on the *Results grid* panel to specify your formatting preference
 - When the *Striped rows?* switch is set to true, the result grid will display
     rows with alternating background colors.
 
-![Preferences sql keyboard shortcuts section](../images/preferences_sql_keyboard_shortcuts.png)
+![Preferences sql keyboard shortcuts section](images/preferences_sql_keyboard_shortcuts.png)
 
 Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the Query Tool window navigation.
 
@@ -642,7 +648,7 @@ Use the fields on the *Keyboard shortcuts* panel to configure shortcuts for the 
 
 Expand the *Schema Diff* node to specify your display preferences.
 
-![Preferences schema diff](../images/preferences_schema_diff.png)
+![Preferences schema diff](images/preferences_schema_diff.png)
 
 Use the *Ignore Grant/Revoke* switch to ignores the grant and revoke command while comparing the objects.
 
@@ -656,7 +662,7 @@ Use the *Ignore Whitespace* switch to ignores the whitespace while comparing the
 
 Expand the *Storage* node to specify your storage preferences.
 
-![Preferences storage section](../images/preferences_storage_options.png)
+![Preferences storage section](images/preferences_storage_options.png)
 
 Use the fields on the *Options* panel to specify storage preferences.
 

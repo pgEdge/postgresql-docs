@@ -35,5 +35,7 @@ This release contains a number of bug fixes and new features since the release o
 [Issue #9721](https://github.com/pgadmin-org/pgadmin4/issues/9721) -  Fixed an issue where permissions page is not completely accessible on full scroll.<br>
 [Issue #9729](https://github.com/pgadmin-org/pgadmin4/issues/9729) -  Fixed an issue where some LLM models would not use database tools in the AI assistant, instead returning text descriptions of tool calls.<br>
 [Issue #9732](https://github.com/pgadmin-org/pgadmin4/issues/9732) -  Improve the AI Assistant user prompt to be more descriptive of the actual functionality.<br>
+[Issue #9734](https://github.com/pgadmin-org/pgadmin4/issues/9734) -  Fixed an issue where LLM responses are not streamed or rendered properly in the AI Assistant.<br>
 [Issue #9736](https://github.com/pgadmin-org/pgadmin4/issues/9736) -  Fix an issue where the AI Assistant was not retaining conversation context between messages, with chat history compaction to manage token budgets.<br>
 [Issue #9740](https://github.com/pgadmin-org/pgadmin4/issues/9740) -  Fixed an issue where the AI Assistant input textbox sometimes swallows the first character of input.<br>
+[Issue #9758](https://github.com/pgadmin-org/pgadmin4/issues/9758) -  Clarify where the LLM API key files should be.<br>
