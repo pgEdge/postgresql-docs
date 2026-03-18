@@ -210,9 +210,12 @@ func (c *Converter) mapChapter(node *sgml.Node, parentPath string) {
 	chapterDir := filepath.Join(parentPath, slug)
 	indexFile := filepath.Join(chapterDir, "index.md")
 
-	if id != "" {
-		c.ctx.RegisterID(id, indexFile, id, title, node.Tag)
+	// Use a synthetic ID from the slug when xml:id is missing,
+	// so the chapter can still be written and found in Pass 2.
+	if id == "" {
+		id = slug
 	}
+	c.ctx.RegisterID(id, indexFile, id, title, node.Tag)
 
 	// Check if chapter has sect1 children
 	sect1s := node.FindChildren("sect1")
@@ -223,9 +226,7 @@ func (c *Converter) mapChapter(node *sgml.Node, parentPath string) {
 	if len(sect1s) == 0 {
 		// No sections — everything goes in a single file
 		chapterFile := filepath.Join(parentPath, slug+".md")
-		if id != "" {
-			c.ctx.IDMap[id].File = chapterFile
-		}
+		c.ctx.IDMap[id].File = chapterFile
 		c.ctx.AddFile(chapterFile, title, parentPath)
 		c.registerDescendantIDs(node, chapterFile)
 		return
@@ -268,9 +269,12 @@ func (c *Converter) mapSection(node *sgml.Node, parentPath string) {
 
 	filePath := filepath.Join(parentPath, slug+".md")
 
-	if id != "" {
-		c.ctx.RegisterID(id, filePath, id, title, node.Tag)
+	// Use a synthetic ID from the slug when xml:id is missing,
+	// so the section can still be written and found in Pass 2.
+	if id == "" {
+		id = slug
 	}
+	c.ctx.RegisterID(id, filePath, id, title, node.Tag)
 
 	c.ctx.AddFile(filePath, title, parentPath)
 
@@ -569,10 +573,15 @@ func (c *Converter) convertReference(node *sgml.Node) error {
 func (c *Converter) convertChapter(node *sgml.Node) error {
 	id := node.GetAttr("id")
 
+	// For chapters without xml:id, use the slug as synthetic ID
+	// (matching what mapChapter registered in Pass 1).
 	if id == "" {
-		// Chapter without ID — skip (no output file mapped)
-		c.ctx.Warn("skipping chapter without id at line %d", node.Line)
-		return nil
+		title := extractTitle(node)
+		id = slugify(title)
+		if id == "" {
+			c.ctx.Warn("skipping chapter without id at line %d", node.Line)
+			return nil
+		}
 	}
 
 	entry, ok := c.ctx.IDMap[id]

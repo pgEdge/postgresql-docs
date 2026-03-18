@@ -3884,7 +3884,9 @@ func TestRegisterDescendantIDsVarlistentry(t *testing.T) {
 func TestConvertChapterNoIDEarlyReturn(t *testing.T) {
 	root, _, _ := sgml.ParseString(
 		`<chapter><title>No ID</title><para>Content.</para></chapter>`)
-	conv := NewConverter(root, "", "", "17.0")
+	outDir := t.TempDir()
+	conv := NewConverter(root, "", outDir, "17.0")
+	conv.buildIDMap(root)
 	err := conv.convertChapter(root.Children[0])
 	if err != nil {
 		t.Fatal(err)
