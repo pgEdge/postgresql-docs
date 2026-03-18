@@ -7,8 +7,9 @@
 //
 //-------------------------------------------------------------------------
 
-// pgdoc-converter converts PostgreSQL DocBook SGML documentation
-// or pgAdmin RST documentation to Markdown for MkDocs Material.
+// pgdoc-converter converts PostgreSQL DocBook SGML documentation,
+// pgAdmin/PostgREST RST documentation, or upstream Markdown
+// documentation to Markdown for MkDocs Material.
 package main
 
 import (
@@ -18,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/pgEdge/postgresql-docs/builder/convert"
+	"github.com/pgEdge/postgresql-docs/builder/md"
 	"github.com/pgEdge/postgresql-docs/builder/nav"
 	"github.com/pgEdge/postgresql-docs/builder/rst"
 	"github.com/pgEdge/postgresql-docs/builder/sgml"
@@ -25,7 +27,7 @@ import (
 )
 
 func main() {
-	mode := flag.String("mode", "sgml", "Conversion mode: sgml or rst")
+	mode := flag.String("mode", "sgml", "Conversion mode: sgml, rst, or md")
 	srcDir := flag.String("src", "", "Path to source documentation directory")
 	outDir := flag.String("out", "./docs", "Output directory for .md files")
 	mkdocsFile := flag.String("mkdocs", "./mkdocs.yml", "Path to mkdocs.yml")
@@ -69,8 +71,11 @@ func main() {
 	case "rst":
 		runRST(*srcDir, *outDir, *mkdocsFile, *version, *copyright,
 			*pgadminSrc, *skipSections, *doValidate, *verbose)
+	case "md":
+		runMD(*srcDir, *outDir, *mkdocsFile, *version,
+			*doValidate, *verbose)
 	default:
-		fmt.Fprintf(os.Stderr, "error: unknown mode %q (use sgml or rst)\n", *mode)
+		fmt.Fprintf(os.Stderr, "error: unknown mode %q (use sgml, rst, or md)\n", *mode)
 		os.Exit(1)
 	}
 }
@@ -256,6 +261,66 @@ func runRST(
 
 	// Validation
 	runValidation(doValidate, verbose, outDir, nil, convWarnings, len(files))
+}
+
+// runMD runs the Markdown conversion pipeline.
+func runMD(
+	srcDir, outDir, mkdocsFile, version string,
+	doValidate, verbose bool,
+) {
+	if verbose {
+		fmt.Println("Converting Markdown documentation...")
+	}
+
+	converter := md.NewConverter(srcDir, outDir, version, verbose)
+
+	if err := converter.Convert(); err != nil {
+		fmt.Fprintf(os.Stderr, "error converting MD: %v\n", err)
+		os.Exit(1)
+	}
+
+	convWarnings := converter.Warnings()
+	if verbose && len(convWarnings) > 0 {
+		fmt.Printf("  Conversion warnings: %d\n",
+			len(convWarnings))
+		for _, w := range convWarnings {
+			fmt.Printf("    %s\n", w)
+		}
+	}
+
+	files := converter.Files()
+	if verbose {
+		fmt.Printf("  Generated %d files\n", len(files))
+	}
+
+	// Nav generation
+	if verbose {
+		fmt.Println("Generating nav...")
+	}
+	navRoot := nav.BuildNav(files)
+	navYAML := nav.GenerateYAML(navRoot)
+
+	if mkdocsFile != "" {
+		if _, err := os.Stat(mkdocsFile); err == nil {
+			siteName := version
+			if err := nav.UpdateMkdocsYML(
+				mkdocsFile, navYAML, siteName); err != nil {
+				fmt.Fprintf(os.Stderr,
+					"error updating mkdocs.yml: %v\n", err)
+				os.Exit(1)
+			}
+			if verbose {
+				fmt.Printf("  Updated %s\n", mkdocsFile)
+			}
+		} else if verbose {
+			fmt.Printf("  %s not found, skipping nav update\n",
+				mkdocsFile)
+		}
+	}
+
+	// Validation
+	runValidation(doValidate, verbose, outDir, nil,
+		convWarnings, len(files))
 }
 
 // runValidation runs link validation if requested.

@@ -10,6 +10,9 @@ sources:
   Markdown
 - **PostgREST** — reStructuredText (RST) sources converted to
   Markdown
+- **PgBouncer** — Markdown sources (split/copied)
+- **pgvector** — Markdown sources (split by section)
+- **pgAudit** — Markdown sources (split by section)
 
 ## Branch Layout
 
@@ -23,6 +26,9 @@ on product/version branches:
 | `pgadmin911` .. `pgadmin913` | pgAdmin 4 v9.11–v9.13 | RST (`docs/en_US/`) |
 | `pgadminmaster` | pgAdmin 4 dev | RST (upstream `master`) |
 | `postgrest145` | PostgREST v14.5 | RST (`docs/`) |
+| `pgbouncer124` .. `pgbouncer125` | PgBouncer 1.24–1.25 | Markdown (`doc/`) |
+| `pgvector080` .. `pgvector081` | pgvector 0.8.0–0.8.1 | Markdown (`README.md`) |
+| `pgaudit161` .. `pgaudit180` | pgAudit 16.1–18.0 | Markdown (`README.md`) |
 
 ## Prerequisites
 
@@ -72,6 +78,12 @@ make convert-rst SRC_DIR=/path/to/pgadmin4/docs/en_US VERSION=9.13
 # PostgREST (RST mode, suppressing Sponsors section)
 make convert-rst SRC_DIR=/path/to/postgrest/docs VERSION=v14.5 \
     SKIP_SECTIONS="Sponsors"
+
+# pgvector (Markdown mode)
+make convert-md SRC_DIR=/path/to/pgvector VERSION="pgvector v0.8.0"
+
+# PgBouncer (Markdown mode)
+make convert-md SRC_DIR=/path/to/pgbouncer/doc VERSION="PgBouncer 1.25"
 ```
 
 Preview the site locally:
@@ -84,7 +96,7 @@ mkdocs serve
 
 The `builder/` directory contains a Go tool (`pgdoc-converter`)
 that converts upstream documentation to Markdown suitable for
-MkDocs Material. It supports two modes:
+MkDocs Material. It supports three modes:
 
 ### SGML Mode (PostgreSQL)
 
@@ -113,6 +125,15 @@ MkDocs Material. It supports two modes:
 - Section suppression (`-skip-sections` flag)
 - Project name inference from Sphinx `conf.py`
 
+### Markdown Mode (PgBouncer, pgvector, pgAudit)
+
+- Single-file projects split by H2 headings into separate
+  pages with promoted heading levels
+- Multi-file projects copied with auto-generated index page
+- Internal anchor links rewritten across split files
+- GitHub Alerts converted to MkDocs admonitions
+- Non-doc files filtered (fragments, changelogs, etc.)
+
 ### Shared
 
 - MkDocs nav YAML generation from document structure
@@ -128,6 +149,7 @@ MkDocs Material. It supports two modes:
 | `lint` | Run `gofmt` and `go vet` |
 | `convert` | Build and run the SGML converter |
 | `convert-rst` | Build and run the RST converter |
+| `convert-md` | Build and run the Markdown converter |
 | `validate` | Build and run with link validation |
 | `clean` | Remove the compiled binary |
 | `setup` | Configure git hooks |
@@ -136,7 +158,7 @@ MkDocs Material. It supports two modes:
 
 ```
 pgdoc-converter [flags]
-  -mode           Conversion mode: sgml or rst (default "sgml")
+  -mode           Conversion mode: sgml, rst, or md (default "sgml")
   -src            Path to source documentation directory
   -out            Output directory for .md files (default "./docs")
   -mkdocs         Path to mkdocs.yml (default "./mkdocs.yml")
@@ -166,11 +188,11 @@ pgdoc-converter [flags]
 
 - [x] PostgreSQL (SGML converter)
 - [x] pgAdmin 4 (RST converter)
-- [ ] PgBouncer (1.24–1.25)
+- [x] PgBouncer (1.24–1.25)
 - [ ] pgBackRest (2.56–2.57)
 - [ ] PostGIS (3.5.3–3.5.5)
-- [ ] pgvector (0.8.0–0.8.1)
-- [ ] pgAudit (16.1–18.0)
+- [x] pgvector (0.8.0–0.8.1)
+- [x] pgAudit (16.1–18.0)
 - [x] psycopg2 (2.9.10)
 - [x] PostgREST (14.5)
 
@@ -184,6 +206,7 @@ builder/            Go converter source
   convert/            SGML-to-Markdown conversion
   sgml/               SGML tokenizer, parser, entity resolver
   rst/                RST parser, converter, directive handlers
+  md/                 Markdown splitter and copier
   nav/                MkDocs nav YAML generation
   validate/           Link validation
 docs/               MkDocs support files (on main branch)

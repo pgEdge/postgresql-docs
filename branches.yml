@@ -5,7 +5,7 @@
 #
 # Fields:
 #   branch       Local/remote branch name
-#   mode         Conversion mode: sgml or rst
+#   mode         Conversion mode: sgml, rst, or md
 #   version      Version label for site_name
 #   upstream     Git URL of the upstream source repository
 #   ref          Git ref to checkout (tag, branch, or commit)
@@ -121,3 +121,58 @@ branches:
     ref: master
     src_subdir: doc/src
     skip_sections: "Contents"
+
+  # --- PgBouncer (Markdown mode) ---
+
+  - branch: pgbouncer124
+    mode: md
+    version: "PgBouncer 1.24"
+    upstream: https://github.com/pgbouncer/pgbouncer.git
+    ref: pgbouncer_1_24_0
+    src_subdir: doc
+
+  - branch: pgbouncer125
+    mode: md
+    version: "PgBouncer 1.25"
+    upstream: https://github.com/pgbouncer/pgbouncer.git
+    ref: pgbouncer_1_25_1
+    src_subdir: doc
+
+  # --- pgvector (Markdown mode) ---
+
+  - branch: pgvector080
+    mode: md
+    version: "pgvector v0.8.0"
+    upstream: https://github.com/pgvector/pgvector.git
+    ref: v0.8.0
+    src_subdir: .
+
+  - branch: pgvector081
+    mode: md
+    version: "pgvector v0.8.1"
+    upstream: https://github.com/pgvector/pgvector.git
+    ref: v0.8.1
+    src_subdir: .
+
+  # --- pgAudit (Markdown mode) ---
+
+  - branch: pgaudit161
+    mode: md
+    version: "pgAudit 16.1"
+    upstream: https://github.com/pgaudit/pgaudit.git
+    ref: "16.1"
+    src_subdir: .
+
+  - branch: pgaudit171
+    mode: md
+    version: "pgAudit 17.1"
+    upstream: https://github.com/pgaudit/pgaudit.git
+    ref: "17.1"
+    src_subdir: .
+
+  - branch: pgaudit180
+    mode: md
+    version: "pgAudit 18.0"
+    upstream: https://github.com/pgaudit/pgaudit.git
+    ref: "18.0"
+    src_subdir: .

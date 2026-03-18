@@ -7,7 +7,7 @@ COPYRIGHT ?= ""
 PGADMIN_SRC ?= ""
 SKIP_SECTIONS ?= ""
 
-.PHONY: build test lint clean convert convert-rst validate setup
+.PHONY: build test lint clean convert convert-rst convert-md validate setup
 
 setup:
 	@git config core.hooksPath .githooks
@@ -34,6 +34,10 @@ convert-rst: build
 		-copyright $(COPYRIGHT) \
 		-pgadmin-src $(PGADMIN_SRC) \
 		-skip-sections $(SKIP_SECTIONS) -verbose
+
+convert-md: build
+	./$(BINARY) -mode md -src $(SRC_DIR) -out $(OUT_DIR) \
+		-mkdocs $(MKDOCS) -version $(VERSION) -verbose
 
 validate: build
 	./$(BINARY) -src $(SRC_DIR) -out $(OUT_DIR) \
