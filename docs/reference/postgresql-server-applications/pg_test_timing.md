@@ -53,18 +53,10 @@ pg_test_timing [OPTION...]
 
  The columns are:
 
--
-
-  nanosecond value that is >= the durations in this bucket
--
-
-  percentage of durations in this bucket
--
-
-  running-sum percentage of durations in this and previous buckets
--
-
-  count of durations in this bucket
+- nanosecond value that is >= the durations in this bucket
+- percentage of durations in this bucket
+- running-sum percentage of durations in this and previous buckets
+- count of durations in this bucket
 
 
  The second block of output goes into more detail, showing the exact timing differences observed. For brevity this list is cut off when the running-sum percentage exceeds the user-selectable cutoff value. However, the largest observed difference is always shown.
