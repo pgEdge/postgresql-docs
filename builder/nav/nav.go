@@ -208,8 +208,16 @@ func yamlQuote(s string) string {
 }
 
 // slugMatch checks if a title matches a directory slug.
+// It compares the slugified title and also checks if the slug
+// is a suffix (e.g. title "pgBackRest User Guide" matches
+// slug "user-guide" because "user-guide" is a suffix of
+// "pgbackrest-user-guide").
 func slugMatch(title, slug string) bool {
-	return shared.Slugify(title) == slug
+	slugified := shared.Slugify(title)
+	if slugified == slug {
+		return true
+	}
+	return strings.HasSuffix(slugified, "-"+slug)
 }
 
 // ensureExtension adds an extension to the markdown_extensions

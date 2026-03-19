@@ -97,6 +97,13 @@ func (c *Converter) Convert() error {
 	// Phase 2: Build ID map and page map
 	c.buildMaps(docs)
 
+	// Add aliases for known page references
+	if _, ok := c.pageMap["user-guide-index"]; !ok {
+		if ug, ok := c.pageMap["user-guide"]; ok {
+			c.pageMap["user-guide-index"] = ug
+		}
+	}
+
 	// Phase 3: Convert each document
 	if err := os.MkdirAll(c.outDir, 0755); err != nil {
 		return fmt.Errorf("creating output dir: %w", err)
@@ -145,10 +152,22 @@ func (c *Converter) discoverSources() map[string]string {
 	return sources
 }
 
+// docOrder defines the preferred order of documents in the nav.
+var docOrder = []string{
+	"index", "user-guide", "faq", "metric",
+	"command", "configuration",
+	"coding", "contributing", "documentation", "release",
+}
+
 // buildMaps creates the ID map and page map from parsed documents.
 func (c *Converter) buildMaps(docs map[string]*sgml.Node) {
 	order := 0
-	for key, doc := range docs {
+	// Process in fixed order for consistent nav
+	for _, key := range docOrder {
+		doc, ok := docs[key]
+		if !ok {
+			continue
+		}
 		sections := doc.FindChildren("section")
 
 		// Determine if this document should be single-page
@@ -167,8 +186,10 @@ func (c *Converter) buildMaps(docs map[string]*sgml.Node) {
 			}
 			c.pageMap[key] = outPath
 
-			title := doc.GetAttr("title")
-			title = substituteVariables(title, c.vars)
+			title := c.docTitle(doc)
+			if key == "index" {
+				title = c.vars["project"]
+			}
 			c.files = append(c.files, &shared.FileEntry{
 				Path:  outPath,
 				Title: title,
@@ -1273,6 +1294,20 @@ func collectBlocks(node *sgml.Node, blocks map[string]*sgml.Node) {
 			blocks[id] = bd
 		}
 	}
+}
+
+// docTitle returns a descriptive title for a <doc> element.
+// When the title is just the project name, it falls back to
+// the subtitle to give each page a distinct nav label.
+func (c *Converter) docTitle(doc *sgml.Node) string {
+	title := substituteVariables(doc.GetAttr("title"), c.vars)
+	subtitle := substituteVariables(doc.GetAttr("subtitle"), c.vars)
+
+	projectName := c.vars["project"]
+	if title == projectName && subtitle != "" {
+		return subtitle
+	}
+	return title
 }
 
 // extractTitle returns the text content of a node's <title> child.
