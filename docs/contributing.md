@@ -7,7 +7,7 @@ pgBackRest Contributing Guidelines.
 ## Table of Contents
 <a name="contents"></a>
 
-[Introduction](user-guide/introduction.md#introduction)
+[Introduction](contributing.md#introduction)
 
 [Building a Development Environment](contributing.md#environment)
 
