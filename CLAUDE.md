@@ -1,167 +1,140 @@
 # PostgreSQL Docs - Development Guidelines
 
-This document provides guidelines for Claude Code when working on this
-project. These rules ensure consistency, quality, and maintainability.
+This document provides guidelines for Claude Code when working
+on this project.
 
-## Project Purpose
+## Project Overview
 
-This project implements an MKDocs/MKDocs-Material based site containing the 
-PostgreSQL documentation, including the latest minor version of each current
-and future major version.
+This project converts upstream documentation from multiple
+PostgreSQL ecosystem projects into MkDocs Material sites. A
+single Go tool (`pgdoc-converter`) handles five source formats
+(SGML, XML, RST, Markdown, and pgBackRest's custom XML),
+producing Markdown output and updating `mkdocs.yml` nav
+sections.
 
-The builder directory contains tooling required to convert the source SGML
-docs into Markdown and update the MKDocs "nav" section. Tooling must always
-be built into the /bin directory, which is .gitignore'd.
+## Git Branching Model
 
-The main branch contains the working version of the tooling, and PostgreSQL
-development docs (from the upstream master branch).
+This project uses an **unusual branching model** that is
+critical to understand:
 
-Additional branches contain the PostgreSQL documentation from released major
-PostgreSQL versions, named after the corresponding PostgreSQL branch in the
-upstream repo. 
+- **`main` branch** contains ONLY the converter tooling
+  (`builder/`), `Makefile`, `build-all.sh`, `branches.yml`,
+  skeleton `mkdocs.yml`, and MkDocs support files
+  (`docs/img/`, `docs/overrides/`, `docs/stylesheets/`).
+  There is NO documentation content on `main`.
+- **Product branches** (e.g. `pg17`, `pgbackrestmaster`,
+  `postgrest145`) each contain the tooling from `main` PLUS
+  the generated Markdown documentation for one product at
+  one version.
+- `build-all.sh` orchestrates this: for each branch defined
+  in `branches.yml`, it checks out the branch, merges
+  tooling from `main`, runs the converter against the
+  upstream source, and commits the result.
+
+**Key implications:**
+
+- Tooling changes (anything under `builder/`, `Makefile`,
+  etc.) MUST be committed to `main`. They propagate to
+  product branches on the next build.
+- Generated docs are NEVER committed to `main`.
+- When working on a product branch, the `builder/` code may
+  be present but should not be modified there — changes will
+  be overwritten on next merge from `main`.
+- If you're asked to fix a converter bug while on a product
+  branch, switch to `main` first, make the fix, then
+  regenerate.
+
+## Builder Architecture
+
+The converter (`builder/main.go`) dispatches to mode-specific
+packages based on the `-mode` flag:
+
+| Mode | Package | Source Format | Products |
+|------|---------|---------------|----------|
+| `sgml` | `convert/` | SGML/DocBook | PostgreSQL |
+| `xml` | `convert/` | XML/DocBook | PostGIS |
+| `rst` | `rst/` | reStructuredText | pgAdmin, PostgREST, psycopg2 |
+| `md` | `md/` | Markdown | PgBouncer, pgvector, pgAudit |
+| `backrest` | `backrest/` | Custom XML | pgBackRest |
+
+Each converter implements a common pattern:
+
+- `Convert()` — run the full pipeline
+- `Files()` — return `[]*shared.FileEntry` for nav generation
+- `Warnings()` — return accumulated warnings
+- `ProjectName()` — return display name for `site_name`
+
+After conversion, `nav.BuildNav()` and `nav.UpdateMkdocsYML()`
+generate the nav section and update the mkdocs config.
+
+### Shared infrastructure (`shared/`, `nav/`, `validate/`)
+
+- `shared.FileEntry` — path, title, order, nav parent
+- `shared.MarkdownWriter` — buffered writer with heading,
+  code block, admonition, and indentation helpers
+- `nav.BuildNav()` — builds nav tree from file entries
+- `nav.UpdateMkdocsYML()` — replaces nav section, sets
+  site_name, ensures `md_in_html` extension
+- `validate/` — post-conversion link checker
+
+### pgBackRest converter notes
+
+pgBackRest uses its own XML DTD (NOT DocBook). Key
+differences from the other converters:
+
+- Uses Go's `encoding/xml` (not the SGML parser) because
+  pgBackRest element names like `<host>`, `<code>`, `<p>`
+  conflict with the SGML parser's HTML element filter.
+- `{[key]}` variable substitution (not XML entities) for
+  project name, version, etc. Multi-pass resolution needed
+  for chained references.
+- `<!ENTITY name SYSTEM "path">` for release note includes
+  — manually resolved before XML parsing.
+- Documents with many top-level `<section>` elements are
+  split into multi-page directories; small docs (FAQ,
+  metrics, coding, contributing, etc.) stay single-page.
+- Nav titles use subtitle when the title is just `{[project]}`
+  (which resolves to "pgBackRest" for most pages).
+- `command.xml` and `configuration.xml` are auto-generated
+  by building pgBackRest and live in `output/xml/` — they
+  won't exist unless pgBackRest has been built. Missing-file
+  link warnings for these are expected.
 
 ## Code Style
 
-### Indentation
+- Use **4 spaces** for indentation (not tabs) in Go code
+- Use **tabs** for indentation in Go code (standard `gofmt`)
+  — note: `gofmt` enforces tabs; the 4-space rule applies
+  to non-Go files (Markdown, YAML, etc.)
+- Always run `make lint` before committing Go changes
 
-- Use **4 spaces** for indentation (not tabs)
-- Apply consistently across all code files
+## Testing
 
-## Project Planning
-
-### Long-Running Tasks
-
-When working on complex, multi-step tasks:
-
-- Store plan documents in `/.claude/` directory
-- Include task breakdowns, progress tracking, and design decisions
-- Use descriptive filenames (e.g., `phase-3-implementation-plan.md`)
+- Always add tests for new functionality
+- Run `make test` and `make lint` to validate
+- Run full test output — never tail or trim stdout/stderr
+- Only modify tests when changes are **expected** to cause
+  failures; investigate unexpected failures first
+- Clean up temporary test files
 
 ## Documentation Standards
 
-ALL documentation for the builder tooling must be in the top-level README.md.
-The documentation under /docs (with the exception of supporting MKDocs 
-stylesheets/overrides/images etc) should be entirely generated from the 
-upstream PostgreSQL documentation.
+- All tooling documentation belongs in the top-level
+  `README.md`
+- Content under `docs/` (except support files) is entirely
+  generated — never hand-edit generated Markdown
+- Wrap Markdown at **79 characters**; exceptions for URLs,
+  code samples, and tables
+- Leave a **blank line** before the first item in any list
+- Use UPPERCASE for root-level Markdown files (`README.md`,
+  `CLAUDE.md`)
 
-### Markdown Formatting
+## Build & Validation Checklist
 
-**List Rendering:**
-
-- Always leave a **blank line** before the first item in any list or
-  sub-list
-- This ensures proper rendering in tools like mkdocs
-
-**Example:**
-
-```markdown
-This is a paragraph.
-
-- First item
-- Second item
-  - Sub-item (note blank line before parent list)
-```
-
-### File Naming Conventions
-
-**Root Directory:**
-
-- Use UPPERCASE names for markdown files (e.g., `README.md`,
-  `CONTRIBUTING.md`)
-- Exception: file extensions remain lowercase
-
-### Line Length
-
-- Wrap markdown content at **79 characters or less**
-- Exceptions:
-  - URLs (don't split)
-  - Code samples
-  - Tables or structured content where wrapping breaks functionality
-
-### Documentation Locations
-
-**README.md:**
-
-- Keep this as a brief summary for users browsing the repository
-- Include: project overview, quick start, and links to full docs
-
-**Full Documentation (`/docs`):**
-
-- This contains the converted PostgreSQL documentation, along with supporting
-    MKDocs/MKDocs-Material CSS, overrides, images, and other supporting files.
-
-## Documentation Framework
-
-- The documentation will be used with MKDocs/MKDocs Material
-- The MKDocs configuration file is found in mkdocs.yml in the project root
-- The table of contents (TOC) in the MKDocs configuration must be maintained
-
-## Testing Requirements
-
-### Test Coverage
-
-**For New Functionality:**
-
-- Always add tests to exercise new features
-- Use the top-level Makefile: `make test`, `make lint`
-- Ensure all tests run under the `go test` suite
-
-### Running Tests
-
-**Complete Validation:**
-
-- Run ALL tests when verifying changes
-- ALWAYS run gofmt if any Go code has been changed
-- Check verbose output for failures or errors
-- **Never** tail or trim test output (stdout and stderr)
-- Capture full output to ensure nothing is missed
-
-### Test Modifications
-
-**When to Modify Tests:**
-
-- Only modify tests if they are **expected to fail** due to your changes
-- If a test fails unexpectedly, investigate the cause first
-- Don't "fix" tests by changing expectations unless the change is
-  intentional
-
-### Test Cleanup
-
-**Temporary Files:**
-
-- Remove temporary files created during test runs
-- Exception: Keep logs that may need review
-- Ensure cleanup happens even if tests fail
-
-## Security Requirements
-
-### Input Validation
-
-**SQL Injection Prevention:**
-
-- Always escape user inputs to prevent injection attacks
-- Exception: Tools explicitly designed to execute user-provided SQL
-  (e.g., `query_database` tool)
-- Use parameterized queries where possible
-
-## Example Checklist
-
-When making changes, verify:
-
-- [ ] Code uses 4-space indentation
-- [ ] Tests added for new functionality
-- [ ] All tests pass (`make test`)
-- [ ] Linting passes (`make lint`)
-- [ ] Documentation updated in `/docs`
-- [ ] Markdown files properly formatted (79 chars, blank lines before
-      lists)
-- [ ] Security considerations addressed
+- [ ] Code uses correct indentation
+- [ ] `make test` passes
+- [ ] `make lint` passes (includes `gofmt` and `go vet`)
+- [ ] Changes committed to the correct branch (`main` for
+      tooling, product branch for generated docs)
+- [ ] `README.md` updated if adding new modes or features
 - [ ] No temporary files left behind
-
-## Questions?
-
-If you're unsure about any of these guidelines, refer to:
-
-- Existing code patterns in the repository
-- Documentation in `/docs`
-- Recent git commits for context

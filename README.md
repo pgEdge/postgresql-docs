@@ -10,25 +10,60 @@ sources:
   Markdown
 - **PostgREST** — reStructuredText (RST) sources converted to
   Markdown
+- **PostGIS** — XML/DocBook sources converted to Markdown
+- **psycopg2** — reStructuredText (RST) sources converted to
+  Markdown
+- **pgBackRest** — Custom XML sources converted to Markdown
 - **PgBouncer** — Markdown sources (split/copied)
 - **pgvector** — Markdown sources (split by section)
 - **pgAudit** — Markdown sources (split by section)
 
+## How It Works
+
+This project uses an unconventional git branching model. The
+`main` branch contains **only** the Go converter tooling, a
+skeleton `mkdocs.yml`, and MkDocs support files (CSS, images,
+overrides). It contains no documentation content.
+
+All generated documentation lives on **product/version
+branches**. Each branch is an orphan-like branch that combines
+the tooling from `main` with the converted Markdown output for
+one product at one version. The `build-all.sh` script automates
+this: for each branch it checks out the branch, merges tooling
+from `main`, clones/fetches the upstream source, runs the
+converter, and commits the result.
+
+This means:
+
+- **Tooling changes** go on `main` and propagate to all
+  branches on the next build.
+- **Generated docs** are never committed to `main` — each
+  branch is self-contained with its own `docs/` and
+  `mkdocs.yml`.
+- Each branch can be independently deployed as a standalone
+  MkDocs Material site.
+
 ## Branch Layout
 
-The `main` branch contains only the converter tooling and a
-skeleton MkDocs configuration. All generated documentation lives
-on product/version branches:
-
-| Branch | Product | Source |
-|--------|---------|--------|
-| `pg16` .. `pg19` | PostgreSQL 16–19 | SGML (upstream `doc/src/sgml/`) |
+| Branch | Product | Source Format |
+|--------|---------|---------------|
+| `pg16` .. `pg19` | PostgreSQL 16–19 | SGML (`doc/src/sgml/`) |
 | `pgadmin911` .. `pgadmin913` | pgAdmin 4 v9.11–v9.13 | RST (`docs/en_US/`) |
-| `pgadminmaster` | pgAdmin 4 dev | RST (upstream `master`) |
+| `pgadminmaster` | pgAdmin 4 dev | RST (`docs/en_US/`) |
 | `postgrest145` | PostgREST v14.5 | RST (`docs/`) |
+| `postgrestmaster` | PostgREST dev | RST (`docs/`) |
+| `postgis355`, `postgis362` | PostGIS 3.5–3.6 | XML/DocBook (`doc/`) |
+| `postgismaster` | PostGIS dev | XML/DocBook (`doc/`) |
+| `psycopg2910` | psycopg2 v2.9.10 | RST (`doc/src/`) |
+| `psycopg2master` | psycopg2 dev | RST (`doc/src/`) |
+| `pgbackrest257` .. `pgbackrest258` | pgBackRest 2.57–2.58 | Custom XML (`doc/`) |
+| `pgbackrestmaster` | pgBackRest dev | Custom XML (`doc/`) |
 | `pgbouncer124` .. `pgbouncer125` | PgBouncer 1.24–1.25 | Markdown (`doc/`) |
+| `pgbouncermaster` | PgBouncer dev | Markdown (`doc/`) |
 | `pgvector080` .. `pgvector081` | pgvector 0.8.0–0.8.1 | Markdown (`README.md`) |
+| `pgvectormaster` | pgvector dev | Markdown (`README.md`) |
 | `pgaudit161` .. `pgaudit180` | pgAudit 16.1–18.0 | Markdown (`README.md`) |
+| `pgauditmaster` | pgAudit dev | Markdown (`README.md`) |
 
 ## Prerequisites
 
@@ -70,20 +105,28 @@ upstream source, and run the converter:
 
 ```sh
 # PostgreSQL (SGML mode)
-make convert SRC_DIR=/path/to/postgresql/doc/src/sgml VERSION=17.2
+make convert SRC_DIR=/path/to/postgresql/doc/src/sgml \
+    VERSION=17.2
 
 # pgAdmin 4 (RST mode)
-make convert-rst SRC_DIR=/path/to/pgadmin4/docs/en_US VERSION=9.13
+make convert-rst SRC_DIR=/path/to/pgadmin4/docs/en_US \
+    VERSION=9.13
 
 # PostgREST (RST mode, suppressing Sponsors section)
-make convert-rst SRC_DIR=/path/to/postgrest/docs VERSION=v14.5 \
-    SKIP_SECTIONS="Sponsors"
+make convert-rst SRC_DIR=/path/to/postgrest/docs \
+    VERSION=v14.5 SKIP_SECTIONS="Sponsors"
+
+# pgBackRest (backrest mode, via binary directly)
+./bin/pgdoc-converter -mode backrest \
+    -src /path/to/pgbackrest/doc -version dev -verbose
 
 # pgvector (Markdown mode)
-make convert-md SRC_DIR=/path/to/pgvector VERSION="pgvector v0.8.0"
+make convert-md SRC_DIR=/path/to/pgvector \
+    VERSION="pgvector v0.8.0"
 
 # PgBouncer (Markdown mode)
-make convert-md SRC_DIR=/path/to/pgbouncer/doc VERSION="PgBouncer 1.25"
+make convert-md SRC_DIR=/path/to/pgbouncer/doc \
+    VERSION="PgBouncer 1.25"
 ```
 
 Preview the site locally:
@@ -94,9 +137,10 @@ mkdocs serve
 
 ## Builder
 
-The `builder/` directory contains a Go tool (`pgdoc-converter`)
-that converts upstream documentation to Markdown suitable for
-MkDocs Material. It supports three modes:
+The `builder/` directory contains a Go tool
+(`pgdoc-converter`) that converts upstream documentation to
+Markdown suitable for MkDocs Material. It supports five
+conversion modes:
 
 ### SGML Mode (PostgreSQL)
 
@@ -106,7 +150,14 @@ MkDocs Material. It supports three modes:
 - Two-pass conversion: ID map then content generation
 - Image copying from the PostgreSQL source tree
 
-### RST Mode (pgAdmin, PostgREST)
+### XML Mode (PostGIS)
+
+- Standard XML/DocBook parsing via Go's `encoding/xml`
+- Entity and XInclude resolution
+- WKT geometry diagrams rendered to inline SVG
+- Image path rewriting for `use_directory_urls`
+
+### RST Mode (pgAdmin, PostgREST, psycopg2)
 
 - Line-by-line RST parser (headings, directives, lists,
   grid tables, labels, substitutions, literal blocks)
@@ -125,6 +176,31 @@ MkDocs Material. It supports three modes:
 - Section suppression (`-skip-sections` flag)
 - Project name inference from Sphinx `conf.py`
 
+### Backrest Mode (pgBackRest)
+
+- Custom XML parser for pgBackRest's proprietary DTD
+  (not DocBook)
+- Entity resolution for `<!ENTITY name SYSTEM "path">`
+  declarations (used heavily in release notes)
+- `{[key]}` variable substitution with multi-pass
+  resolution for chained references
+- Block definitions (`<block-define>`/`<block>`) for
+  reusable content fragments
+- Executable documentation: `<execute-list>` commands
+  rendered as bash code blocks with optional output
+- Configuration blocks: `<backrest-config>` and
+  `<postgres-config>` rendered as INI code blocks
+- Self-closing brand elements (`<backrest/>`, `<postgres/>`,
+  `<exe/>`)
+- Semantic inline elements (`<file>`, `<path>`, `<cmd>`,
+  `<br-option>`, etc.) rendered as inline code
+- Cross-page link resolution with section path splitting
+  (e.g. `quickstart/perform-restore`)
+- Multi-page documents split by top-level `<section>`;
+  single-page for small docs (FAQ, metrics, etc.)
+- Nav titles derived from subtitle when title is just the
+  project name
+
 ### Markdown Mode (PgBouncer, pgvector, pgAudit)
 
 - Single-file projects split by H2 headings into separate
@@ -137,6 +213,7 @@ MkDocs Material. It supports three modes:
 ### Shared
 
 - MkDocs nav YAML generation from document structure
+- Automatic `md_in_html` extension injection
 - Link validation (broken links, missing anchors)
 - Common types (`FileEntry`, `IDEntry`, `MarkdownWriter`)
 
@@ -158,9 +235,11 @@ MkDocs Material. It supports three modes:
 
 ```
 pgdoc-converter [flags]
-  -mode           Conversion mode: sgml, rst, or md (default "sgml")
+  -mode           Conversion mode: sgml, xml, rst, md,
+                  or backrest (default "sgml")
   -src            Path to source documentation directory
-  -out            Output directory for .md files (default "./docs")
+  -out            Output directory for .md files
+                  (default "./docs")
   -mkdocs         Path to mkdocs.yml (default "./mkdocs.yml")
   -version        Version label (e.g. "17.2" or "9.13")
   -copyright      Copyright string (RST mode only)
@@ -190,7 +269,7 @@ pgdoc-converter [flags]
 - [x] pgAdmin 4 (RST converter)
 - [x] PgBouncer (1.24–1.25)
 - [x] pgBackRest (2.57–2.58)
-- [ ] PostGIS (3.5.3–3.5.5)
+- [x] PostGIS (3.5.5–3.6.2)
 - [x] pgvector (0.8.0–0.8.1)
 - [x] pgAudit (16.1–18.0)
 - [x] psycopg2 (2.9.10)
@@ -202,13 +281,15 @@ pgdoc-converter [flags]
 build-all.sh        Build orchestration script
 branches.yml        Branch/product configuration
 builder/            Go converter source
-  shared/             Shared types and Markdown writer
+  backrest/           pgBackRest custom XML converter
   convert/            SGML-to-Markdown conversion
-  sgml/               SGML tokenizer, parser, entity resolver
-  rst/                RST parser, converter, directive handlers
   md/                 Markdown splitter and copier
   nav/                MkDocs nav YAML generation
+  rst/                RST parser, converter, directive handlers
+  sgml/               SGML tokenizer, parser, entity resolver
+  shared/             Shared types and Markdown writer
   validate/           Link validation
+  wkt/                WKT geometry to SVG renderer (PostGIS)
 docs/               MkDocs support files (on main branch)
   img/                Site images (logo, favicon)
   overrides/          MkDocs Material template overrides
