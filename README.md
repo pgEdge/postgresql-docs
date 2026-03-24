@@ -275,6 +275,17 @@ pgdoc-converter [flags]
 - [x] psycopg2 (2.9.10)
 - [x] PostgREST (14.5)
 
+### Remaining Extensions
+
+- [ ] pg_vectorize
+- [ ] pg_tokenizer
+- [ ] vchord_bm25
+- [ ] pg_cron
+- [ ] pgmq
+- [ ] pg_stat_monitor
+- [ ] pldebugger
+- [ ] system_stats
+
 ## Project Structure
 
 ```
