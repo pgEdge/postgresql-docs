@@ -316,3 +316,19 @@ branches:
     upstream: https://github.com/citusdata/pg_cron.git
     ref: main
     src_subdir: .
+
+  # --- pgmq (MkDocs import mode) ---
+
+  - branch: pgmq1110
+    mode: mkdocs
+    version: "pgmq v1.11.0"
+    upstream: https://github.com/pgmq/pgmq.git
+    ref: v1.11.0
+    src_subdir: docs
+
+  - branch: pgmqmaster
+    mode: mkdocs
+    version: "pgmq dev"
+    upstream: https://github.com/pgmq/pgmq.git
+    ref: main
+    src_subdir: docs
