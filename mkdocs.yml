@@ -1,4 +1,4 @@
-site_name: Documentation
+site_name: pg_cron v1.6.7
 
 extra_css:
   - stylesheets/extra.css
@@ -50,3 +50,14 @@ extra:
   generator: false
 
 repo_url: https://github.com/pgEdge/postgresql-docs
+
+nav:
+  - README: index.md
+  - What is pg_cron?: what-is-pg_cron.md
+  - Installing pg_cron: installing-pg_cron.md
+  - Setting up pg_cron: setting-up-pg_cron.md
+  - Viewing job run details: viewing-job-run-details.md
+  - Extension settings: extension-settings.md
+  - Example use cases: example-use-cases.md
+  - Managed services: managed-services.md
+  - Code of Conduct: code-of-conduct.md
