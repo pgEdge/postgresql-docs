@@ -18,6 +18,7 @@ sources:
 - **pgvector** — Markdown sources (split by section)
 - **pgAudit** — Markdown sources (split by section)
 - **pg_vectorize** — MkDocs site (imported with upstream nav)
+- **pg_tokenizer** — Markdown sources (multi-file copy)
 
 ## How It Works
 
@@ -67,6 +68,8 @@ This means:
 | `pgauditmaster` | pgAudit dev | Markdown (`README.md`) |
 | `pgvectorize0260` | pg_vectorize v0.26.0 | MkDocs (`docs/`) |
 | `pgvectorizemaster` | pg_vectorize dev | MkDocs (`docs/`) |
+| `pgtokenizer011` | pg_tokenizer v0.1.1 | Markdown (`docs/`) |
+| `pgtokenizermaster` | pg_tokenizer dev | Markdown (`docs/`) |
 
 ## Prerequisites
 
@@ -291,7 +294,7 @@ pgdoc-converter [flags]
 ### Remaining Extensions
 
 - [x] pg_vectorize (v0.26.0)
-- [ ] pg_tokenizer
+- [x] pg_tokenizer (v0.1.1)
 - [ ] vchord_bm25
 - [ ] pg_cron
 - [ ] pgmq

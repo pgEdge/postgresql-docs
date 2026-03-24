@@ -268,3 +268,19 @@ branches:
     upstream: https://github.com/ChuckHend/pg_vectorize.git
     ref: main
     src_subdir: docs
+
+  # --- pg_tokenizer (Markdown mode) ---
+
+  - branch: pgtokenizer011
+    mode: md
+    version: "pg_tokenizer v0.1.1"
+    upstream: https://github.com/tensorchord/pg_tokenizer.rs.git
+    ref: "0.1.1"
+    src_subdir: docs
+
+  - branch: pgtokenizermaster
+    mode: md
+    version: "pg_tokenizer dev"
+    upstream: https://github.com/tensorchord/pg_tokenizer.rs.git
+    ref: main
+    src_subdir: docs
