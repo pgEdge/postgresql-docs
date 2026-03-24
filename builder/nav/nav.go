@@ -24,6 +24,7 @@ import (
 type NavEntry struct {
 	Title    string
 	Path     string // file path for leaf nodes
+	Slug     string // original directory slug for matching
 	Children []*NavEntry
 }
 
@@ -53,13 +54,17 @@ func insertEntry(root *NavEntry, filePath, title, navParent string) {
 		// Find or create child directory node
 		var found *NavEntry
 		for _, child := range current.Children {
-			if slugMatch(child.Title, part) {
+			if child.Slug == part ||
+				slugMatch(child.Title, part) {
 				found = child
 				break
 			}
 		}
 		if found == nil {
-			found = &NavEntry{Title: deslugify(part)}
+			found = &NavEntry{
+				Title: deslugify(part),
+				Slug:  part,
+			}
 			current.Children = append(current.Children, found)
 		}
 		current = found

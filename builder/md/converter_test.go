@@ -282,6 +282,18 @@ func TestExtractTitle(t *testing.T) {
 			"index.md",
 			"Server",
 		},
+		{
+			"<h1 align=\"center\">\n <b>Title</b>\n</h1>\n\n" +
+				"```bash\n# not a heading\ndocker up\n```\n",
+			"readme.md",
+			"Title",
+		},
+		{
+			"Intro.\n\n```bash\n# fake heading\n```\n\n" +
+				"## Real H2\n\nBody.\n",
+			"file.md",
+			"Real H2",
+		},
 	}
 	for _, tt := range tests {
 		got := extractTitle(tt.content, tt.filename)

@@ -563,10 +563,31 @@ var reHTMLTags = regexp.MustCompile(`<[^>]+>`)
 // It checks for ATX H1 (#), HTML <h1>, and ATX H2 (##) in
 // that priority order, falling back to the filename stem.
 func extractTitle(content, filename string) string {
+	// Try HTML <h1> first (handles multiline tags like
+	// <h1 align="center"><b>Title</b></h1>)
+	if m := reHTMLH1.FindStringSubmatch(content); m != nil {
+		inner := reHTMLTags.ReplaceAllString(m[1], "")
+		inner = strings.Join(strings.Fields(inner), " ")
+		if inner != "" {
+			return inner
+		}
+	}
+
+	// Scan for ATX headings, skipping code blocks
 	var firstH2 string
+	inCodeBlock := false
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	for scanner.Scan() {
 		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") ||
+			strings.HasPrefix(trimmed, "~~~") {
+			inCodeBlock = !inCodeBlock
+			continue
+		}
+		if inCodeBlock {
+			continue
+		}
 		m := reATXHeading.FindStringSubmatch(line)
 		if m != nil {
 			if len(m[1]) == 1 {
@@ -575,15 +596,6 @@ func extractTitle(content, filename string) string {
 			if len(m[1]) == 2 && firstH2 == "" {
 				firstH2 = strings.TrimSpace(m[2])
 			}
-		}
-	}
-
-	// Try HTML <h1> (may span multiple lines)
-	if m := reHTMLH1.FindStringSubmatch(content); m != nil {
-		inner := reHTMLTags.ReplaceAllString(m[1], "")
-		inner = strings.Join(strings.Fields(inner), " ")
-		if inner != "" {
-			return inner
 		}
 	}
 
