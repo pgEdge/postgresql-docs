@@ -553,16 +553,45 @@ func (c *Converter) copyFiles(files []string) error {
 	return nil
 }
 
-// extractTitle returns the first H1 heading text, or the
-// filename stem as a fallback.
+// reHTMLH1 matches HTML <h1> tags (possibly multiline) and
+// extracts the inner text, stripping nested tags like <b>.
+var reHTMLH1 = regexp.MustCompile(
+	`(?is)<h1[^>]*>(.*?)</h1>`)
+var reHTMLTags = regexp.MustCompile(`<[^>]+>`)
+
+// extractTitle returns the first heading text from content.
+// It checks for ATX H1 (#), HTML <h1>, and ATX H2 (##) in
+// that priority order, falling back to the filename stem.
 func extractTitle(content, filename string) string {
+	var firstH2 string
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	for scanner.Scan() {
-		m := reATXHeading.FindStringSubmatch(scanner.Text())
-		if m != nil && len(m[1]) == 1 {
-			return strings.TrimSpace(m[2])
+		line := scanner.Text()
+		m := reATXHeading.FindStringSubmatch(line)
+		if m != nil {
+			if len(m[1]) == 1 {
+				return strings.TrimSpace(m[2])
+			}
+			if len(m[1]) == 2 && firstH2 == "" {
+				firstH2 = strings.TrimSpace(m[2])
+			}
 		}
 	}
+
+	// Try HTML <h1> (may span multiple lines)
+	if m := reHTMLH1.FindStringSubmatch(content); m != nil {
+		inner := reHTMLTags.ReplaceAllString(m[1], "")
+		inner = strings.Join(strings.Fields(inner), " ")
+		if inner != "" {
+			return inner
+		}
+	}
+
+	// Fall back to first H2
+	if firstH2 != "" {
+		return firstH2
+	}
+
 	base := filepath.Base(filename)
 	return strings.TrimSuffix(base, filepath.Ext(base))
 }

@@ -266,13 +266,28 @@ func TestExtractTitle(t *testing.T) {
 	}{
 		{"# My Title\n\nBody.", "file.md", "My Title"},
 		{"No heading here.", "config.md", "config"},
-		{"## Only H2\n\nBody.", "readme.md", "readme"},
+		{"## Only H2\n\nBody.", "readme.md", "Only H2"},
+		{
+			"<h1 align=\"center\">\n <b>My Project</b>\n</h1>\n\nBody.",
+			"readme.md",
+			"My Project",
+		},
+		{
+			"<H1>Simple HTML Title</H1>\n\nBody.",
+			"file.md",
+			"Simple HTML Title",
+		},
+		{
+			"## Server\n\nDescription.\n",
+			"index.md",
+			"Server",
+		},
 	}
 	for _, tt := range tests {
 		got := extractTitle(tt.content, tt.filename)
 		if got != tt.want {
 			t.Errorf("extractTitle(%q, %q) = %q, want %q",
-				tt.content[:20], tt.filename, got, tt.want)
+				tt.content, tt.filename, got, tt.want)
 		}
 	}
 }
