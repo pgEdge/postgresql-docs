@@ -332,3 +332,19 @@ branches:
     upstream: https://github.com/pgmq/pgmq.git
     ref: main
     src_subdir: docs
+
+  # --- pg_stat_monitor (Markdown mode) ---
+
+  - branch: pgstatmonitor231
+    mode: md
+    version: "pg_stat_monitor v2.3.1"
+    upstream: https://github.com/percona/pg_stat_monitor.git
+    ref: "2.3.1"
+    src_subdir: .
+
+  - branch: pgstatmonitormaster
+    mode: md
+    version: "pg_stat_monitor dev"
+    upstream: https://github.com/percona/pg_stat_monitor.git
+    ref: main
+    src_subdir: .

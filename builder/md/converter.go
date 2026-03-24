@@ -125,7 +125,8 @@ func filterDocFiles(files []string) []string {
 		}
 		switch base {
 		case "changelog.md", "changes.md", "contributing.md",
-			"license.md", "code_of_conduct.md":
+			"license.md", "code_of_conduct.md",
+			"code-of-conduct.md", "security.md":
 			continue
 		}
 		// Skip files inside non-doc directories

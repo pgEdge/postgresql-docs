@@ -22,6 +22,7 @@ sources:
 - **vchord_bm25** — Markdown sources (split by section)
 - **pg_cron** — Markdown sources (split by section)
 - **pgmq** — MkDocs site (imported with upstream nav)
+- **pg_stat_monitor** — Markdown sources (split by section)
 
 ## How It Works
 
@@ -79,6 +80,8 @@ This means:
 | `pgcronmaster` | pg_cron dev | Markdown (`README.md`) |
 | `pgmq1110` | pgmq v1.11.0 | MkDocs (`docs/`) |
 | `pgmqmaster` | pgmq dev | MkDocs (`docs/`) |
+| `pgstatmonitor231` | pg_stat_monitor v2.3.1 | Markdown (`README.md`) |
+| `pgstatmonitormaster` | pg_stat_monitor dev | Markdown (`README.md`) |
 
 ## Prerequisites
 
@@ -307,7 +310,7 @@ pgdoc-converter [flags]
 - [x] vchord_bm25 (v0.3.0)
 - [x] pg_cron (v1.6.7)
 - [x] pgmq (v1.11.0)
-- [ ] pg_stat_monitor
+- [x] pg_stat_monitor (v2.3.1)
 - [ ] pldebugger
 - [ ] system_stats
 
