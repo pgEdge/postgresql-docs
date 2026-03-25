@@ -17,7 +17,8 @@ import (
 )
 
 // reVariable matches {[key]} substitution patterns.
-var reVariable = regexp.MustCompile(`\{\[([^\]]+)\]\}`)
+// Also matches the transposed {[key}] typo found in upstream XML.
+var reVariable = regexp.MustCompile(`\{\[([^\]}]+)\]\}|\{\[([^\]}]+)\}\]`)
 
 // collectVariables extracts static variables from <variable-list>
 // elements in the tree. Variables with eval="y" or with if
@@ -58,7 +59,7 @@ func substituteVariables(text string, vars map[string]string) string {
 	for i := 0; i < 5; i++ {
 		prev := text
 		text = reVariable.ReplaceAllStringFunc(text, func(m string) string {
-			key := reVariable.FindStringSubmatch(m)[1]
+			key := varKey(m)
 			if val, ok := vars[key]; ok {
 				return val
 			}
@@ -70,8 +71,17 @@ func substituteVariables(text string, vars map[string]string) string {
 	}
 	// Replace any remaining unresolved variables
 	text = reVariable.ReplaceAllStringFunc(text, func(m string) string {
-		key := reVariable.FindStringSubmatch(m)[1]
+		key := varKey(m)
 		return "<" + key + ">"
 	})
 	return text
+}
+
+// varKey extracts the variable name from a {[key]} or {[key}] match.
+func varKey(m string) string {
+	sub := reVariable.FindStringSubmatch(m)
+	if sub[1] != "" {
+		return sub[1]
+	}
+	return sub[2]
 }

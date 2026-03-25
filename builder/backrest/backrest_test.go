@@ -95,6 +95,9 @@ func TestVariableSubstitution(t *testing.T) {
 		{"{[project]} v{[version]}", "pgBackRest v2.57.0"},
 		{"{[unknown]}", "<unknown>"},
 		{"no vars", "no vars"},
+		// Transposed closing braces (upstream typo)
+		{"{[project}]", "pgBackRest"},
+		{"{[project}]/issues", "pgBackRest/issues"},
 	}
 	for _, tt := range tests {
 		got := substituteVariables(tt.input, vars)
